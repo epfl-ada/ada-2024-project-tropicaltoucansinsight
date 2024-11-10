@@ -1,6 +1,7 @@
 import os
 import requests
 
+
 def get_data(datasets, target_dir="data"):
     """
     Download the specified datasets from the web and save them in the target directory.
@@ -20,21 +21,15 @@ def get_data(datasets, target_dir="data"):
         url, file_name = dataset
         file_path = os.path.join(target_dir, file_name)
 
-        # Check if the file already exists
+        # Check if the file already exists, if not download it
         if not os.path.exists(file_path):
             print(f"Downloading {file_name} from {url}...")
-            try:
-                response = requests.get(url, stream=True)
-                response.raise_for_status()  # Check if the request was successful
-
-                with open(file_path, 'wb') as file:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        if chunk:
-                            file.write(chunk)
-                print(f"{file_name} downloaded successfully.")
-
-            except requests.exceptions.RequestException as e:
-                print(f"Error downloading {file_name}: {e}")
+            response = requests.get(url, stream=True)
+            with open(file_path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        file.write(chunk)
+            print(f"{file_name} downloaded successfully.")
 
         else:
             print(f"{file_name} already exists in '{target_dir}'.")
