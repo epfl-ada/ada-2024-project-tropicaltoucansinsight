@@ -58,7 +58,7 @@ def save_channels_grouped_by_category(df, output_dir="data/channels/"):
     channels_by_cat = df.groupby("category_cc")
     for category, channels in channels_by_cat:
         output_file = os.path.join(output_dir, f"{category}.csv")
-        channels.to_csv(output_file, sep='\t')
+        channels.to_csv(output_file, sep='\t', index=False)
 
 
 def get_stats_on_channel_category(data):
