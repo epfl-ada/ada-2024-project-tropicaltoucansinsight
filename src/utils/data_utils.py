@@ -54,7 +54,9 @@ def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbo
     Args:
         df (pd.DataFrame): DataFrame containing the channel data.
         column (str): Column name to group the data by.
-        output_dir (str): Output directory to save the files.
+        output_dir (str): Output directory to save the files
+        overwrite (bool): Whether to overwrite the files if they already exist.
+        verbose (bool): Whether to print messages about the process.
     """
     os.makedirs(output_dir, exist_ok=True)
     df_by_cat = df.groupby(column)
@@ -69,6 +71,73 @@ def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbo
                 if verbose:
                     print(f"File '{output_file}' exists and will be overwritten.")
         group_data.to_csv(output_file, sep='\t', index=False, compression='gzip')
+
+
+def get_channel_name(channel_id, df_channels):
+    """
+    Get the name of the channel given its id
+
+    Args:
+        channel_id (str): The channel id
+        df_channels (pd.DataFrame): The DataFrame containing the channel information
+
+    Returns:
+        str: The name of the channel
+    """
+    return df_channels[df_channels["channel"] == channel_id]["name_cc"].values[0]
+
+
+def merge_channel_name(df, df_channels, subscriber_rank=False):
+    """
+    Merge the channel id with the channel name
+
+    Args:
+        df (pd.DataFrame): The DataFrame to be merged
+        df_channels (pd.DataFrame): The DataFrame containing the channel information
+        subscriber_rank (bool): Whether to include the subscriber rank of the channel
+
+    Returns:
+        pd.DataFrame: The merged DataFrame
+    """
+    if subscriber_rank:
+        df_merged = df.merge(df_channels[["channel", "name_cc", "subscriber_rank_sb"]], on="channel", how="left")
+    else:
+        df_merged = df.merge(df_channels[["channel", "name_cc"]], on="channel", how="left")
+    return df_merged
+
+
+def plot_channel_time_series(df, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
+    """
+    Plot specified quantities over time for a given dataset.
+
+    Args:
+        df (pd.DataFrame): The dataset containing time series data.
+        datetime_col (str): The name of the column containing datetime values.
+        quantities_to_plot (list of str): List of columns in `data` to plot on the time series.
+        title (str): Title for the plot. Default is "Channel Time Series Data".
+    """
+    # Convert to datetime and sort by date
+    df = df.copy()
+    df[datetime_col] = pd.to_datetime(df[datetime_col])
+    df = df.sort_values(by=datetime_col)
+
+    # Normalize specified quantities
+    for quantity in quantities_to_plot:
+        df[quantity] = df[quantity] - df[quantity].min()
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.suptitle(title, fontsize=20)
+
+    for quantity in quantities_to_plot:
+        sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=quantity, marker='.', linestyle='-')
+
+    plt.xlabel("Date", fontsize=15)
+    plt.ylabel("Count", fontsize=15)
+    plt.legend(fontsize=15)
+    plt.grid(True, alpha=0.5)
+    plt.xlim(df[datetime_col].min(), df[datetime_col].max())
+    plt.show()
 
 
 def cast_df(df):
