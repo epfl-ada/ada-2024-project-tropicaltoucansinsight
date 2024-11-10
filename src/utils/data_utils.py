@@ -13,7 +13,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-
 def get_data(datasets, target_dir="data"):
     """
     Download the specified datasets from the web and save them in the target directory.
@@ -64,21 +63,105 @@ def save_data_grouped_by_category(df, column, output_dir):
         channels.to_csv(output_file, sep='\t', index=False, compression='gzip')
 
 
-def get_stats_on_channel_category(data):
+def cast_df(df):
+    """
+    Downcast numerical columns to lower precision types, convert date columns to datetime,
+    and convert object columns to string type for memory optimization.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to be processed.
+
+    Returns:
+        None: The DataFrame is modified in place.
+    """
+    # Downcast the numbers from 64 to 32 bits for less memory usage
+    for col in df.select_dtypes(include=['int64']).columns:
+        df[col] = pd.to_numeric(df[col], downcast='integer')
+
+    for col in df.select_dtypes(include=['float64']).columns:
+        df[col] = pd.to_numeric(df[col], downcast='float')
+
+    # Convert the join_date column to datetime
+    df["join_date"] = pd.to_datetime(df["join_date"])
+
+    # Convert the columns to string when type is object
+    df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x, inplace=True)
+
+
+
+def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
     """
     Get basic statistics on YouTube channels in a certain category.
 
     Args:
-        data (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
+        df (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
+        category_name (str): Name of the category to analyze.
+        corr_method (str): The method to compute the correlation matrix.
 
     Returns:
         df_stats (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each channel category.
     """
+    print(f"Displaying statistics to study the YouTube channels in the category: {category_name}", end='\n\n\n')
+
+    # Get the memory usage of the loaded dataframe
+    memory_bytes = df.memory_usage(deep=True).sum()
+    memory_mb = memory_bytes / (2 ** 20)  # As 1 MB = 2^20 bytes
+    print(f"The DataFrame occupies {memory_mb:.2f} MB.", end='\n\n')
+
+    # Get the count and percentage of missing values
+    missing_count = df.isnull().sum()
+    missing_percentage = (df.isnull().sum() / len(df)) * 100
+
+    missing_data = pd.DataFrame({
+        'Missing values': missing_count,
+        'Percentage missing': missing_percentage
+    })
+
+    # Get the descriptive statistics for numerical columns
+    desc = df.describe().transpose()
+
+    # Get the types of each column
+    column_types = df.dtypes
+    print(column_types)
+    # Concatenate the descriptive stats, missing data stats, and column types
+    stats = pd.concat([desc, missing_data, column_types.rename('Type')], axis=1)
+
+    # Ensure the columns are in the right order: statistics followed by missing data stats and types
+    stats = stats[['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'Missing values', 'Percentage missing', 'Type']]
+
+    # Print out the stats
+    print(f"Descriptive statistics for the {category_name} category:")
+    print(stats)
+
+    # Plot histograms for numerical columns
+    numerical_columns = df.select_dtypes(include=['integer', 'float']).columns
+
+    for col in numerical_columns:
+        plt.figure(figsize=(10, 6))
+        sns.histplot(df[col], bins=30, color='skyblue', linewidth=0)
+        plt.title(f"Histogram of {col} in the {category_name} category")
+
+        if col == 'videos_cc' or col == 'subscribers_cc':
+            plt.yscale('log')
+            plt.xlabel(f"{col} values")
+            plt.ylabel("Count (log)")
+        else:
+            plt.xlabel(f"{col} values")
+            plt.ylabel("Count")
+
+        plt.tight_layout()
+        plt.show()
+
+    # Plot the correlation matrix with category name in the title
+    corr_matrix = df[numerical_columns].corr(method=corr_method)
+    sns.heatmap(corr_matrix, annot=True)
+    plt.title(f"Correlation matrix of numerical columns in the {category_name} category")
+
+    return stats
 
 
 
-
-def get_stats_on_video_category(data):
+def get_stats_on_video_category(df):
     """
     Get basic statistics on YouTube videos in a certain category.
 
