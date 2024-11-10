@@ -47,6 +47,19 @@ def get_data(datasets, target_dir="data"):
             print(f"{file_name} already exists in '{target_dir}'.")
 
 
+def save_channels_grouped_by_category(df, output_dir="data/channels/"):
+    """
+    Groups the channels by category and saves them to separate files.
+
+    :param df: DataFrame containing the channel data.
+    :param output_dir: Output directory to save the files.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    channels_by_cat = df.groupby("category_cc")
+    for category, channels in channels_by_cat:
+        output_file = os.path.join(output_dir, f"{category}.csv")
+        channels.to_csv(output_file, sep='\t')
+
 
 def get_stats_on_channel_category(data):
     """
