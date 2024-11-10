@@ -1,5 +1,17 @@
+"""
+data_utils.py
+
+These might include helper functions for data transformations, cleaning, augmentations, or any operations used
+repeatedly within the dataloading process.
+"""
+
 import os
 import requests
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 
 def get_data(datasets, target_dir="data"):
@@ -33,3 +45,24 @@ def get_data(datasets, target_dir="data"):
 
         else:
             print(f"{file_name} already exists in '{target_dir}'.")
+
+
+
+def get_stats_on_channel_category(data):
+    """
+    Get basic statistics on YouTube channels in a certain category.
+
+    :param data (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
+    :return (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each channel category.
+    """
+
+
+
+
+def get_stats_on_video_category(data):
+    """
+    Get basic statistics on YouTube videos in a certain category.
+
+    :param data (pd.DataFrame): Dataset containing the information of YouTube videos in a given category.
+    :return (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each video category.
+    """
