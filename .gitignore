@@ -160,3 +160,14 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+/.idea
+/data/channels
+data/channels.tsv.gz
+data/num_comments_authors.tsv.gz
+data/num_comments.tsv.gz
+/data/music
+/data/time_series
+/data/video_metadata
+data/youtube_comments.tsv.gz
+data/time_series.tsv.gz
+data/yt_metadata_en.jsonl.gz

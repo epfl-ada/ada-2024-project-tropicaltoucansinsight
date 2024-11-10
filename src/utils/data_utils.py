@@ -47,7 +47,7 @@ def get_data(datasets, target_dir="data"):
             print(f"{file_name} already exists in '{target_dir}'.")
 
 
-def save_data_grouped_by_category(df, column, output_dir):
+def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbose=True):
     """
     Groups the channels by category and saves them to separate files.
 
@@ -60,7 +60,15 @@ def save_data_grouped_by_category(df, column, output_dir):
     channels_by_cat = df.groupby(column)
     for category, channels in channels_by_cat:
         output_file = os.path.join(output_dir, f"{category}.tsv.gz")
-        channels.to_csv(output_file, sep='\t', index=False, compression='gzip')
+        if os.path.exists(output_file):
+            if not overwrite:
+                if verbose:
+                    print(f"File '{output_file}' already exists. Skipping...")
+                continue
+            else:
+                if verbose:
+                    print(f"File '{output_file}' exists and will be overwritten.")
+    channels.to_csv(output_file, sep='\t', index=False, compression='gzip')
 
 
 def cast_df(df):
