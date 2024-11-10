@@ -1,0 +1,1 @@
+`src/data/`: This folder is for data loading modules or data modules. It contains code to read, preprocess, and structure data, such as custom Dataset classes or data transformation functions.
