@@ -26,7 +26,7 @@ def get_data(datasets, target_dir="data"):
 
     for dataset in datasets:
         # Ensure each dataset is a valid tuple
-        if not isinstance(dataset, tuple) or len(dataset) != 2:
+        if not isinstance(datasegit t, tuple) or len(dataset) != 2:
             print(f"Invalid dataset entry: {dataset}. It must be a tuple (URL, filename).")
             continue
 
@@ -149,7 +149,7 @@ def cast_df(df):
         df (pd.DataFrame): The DataFrame to be processed.
 
     Returns:
-        None: The DataFrame is modified in place.
+        new_df (pd.DataFrame): The new DataFrame with updated types.
     """
     # Downcast the numbers from 64 to 32 bits for less memory usage
     for col in df.select_dtypes(include=['int64']).columns:
@@ -162,8 +162,9 @@ def cast_df(df):
     df["join_date"] = pd.to_datetime(df["join_date"])
 
     # Convert the columns to string when type is object
-    df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x, inplace=True)
+    new_df = df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x)
 
+    return new_df
 
 
 def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
@@ -187,7 +188,7 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
 
     # Get the count and percentage of missing values
     missing_count = df.isnull().sum()
-    missing_percentage = (df.isnull().sum() / len(df)) * 100
+    missing_percentage = (missing_count / len(df)) * 100
 
     missing_data = pd.DataFrame({
         'Missing values': missing_count,
@@ -199,43 +200,46 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
 
     # Get the types of each column
     column_types = df.dtypes
-    print(column_types)
+
     # Concatenate the descriptive stats, missing data stats, and column types
     stats = pd.concat([desc, missing_data, column_types.rename('Type')], axis=1)
 
     # Ensure the columns are in the right order: statistics followed by missing data stats and types
-    stats = stats[['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'Missing values', 'Percentage missing', 'Type']]
+    stats = stats[
+        ['Type', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'Missing values', 'Percentage missing']]
 
     # Print out the stats
     print(f"Descriptive statistics for the {category_name} category:")
     print(stats)
 
+    # Extract the year and the month from the datetime column
+    df['year'] = df['join_date'].dt.year
+    df['month'] = df['join_date'].dt.month
+
     # Plot histograms for numerical columns
     numerical_columns = df.select_dtypes(include=['integer', 'float']).columns
 
     for col in numerical_columns:
-        plt.figure(figsize=(10, 6))
-        sns.histplot(df[col], bins=30, color='skyblue', linewidth=0)
+        plt.figure(figsize=(10, 7))
+        sns.histplot(df[col], bins=30, color='blue', linewidth=0)
         plt.title(f"Histogram of {col} in the {category_name} category")
-
+        plt.xlabel(f"Values for {col}")
         if col == 'videos_cc' or col == 'subscribers_cc':
             plt.yscale('log')
-            plt.xlabel(f"{col} values")
             plt.ylabel("Count (log)")
         else:
-            plt.xlabel(f"{col} values")
+            plt.yscale('linear')
             plt.ylabel("Count")
 
-        plt.tight_layout()
         plt.show()
 
-    # Plot the correlation matrix with category name in the title
+    # Plot the correlation matrix
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
     plt.title(f"Correlation matrix of numerical columns in the {category_name} category")
+    plt.show()
 
     return stats
-
 
 
 def get_stats_on_video_category(df):
