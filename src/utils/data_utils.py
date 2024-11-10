@@ -26,7 +26,7 @@ def get_data(datasets, target_dir="data"):
 
     for dataset in datasets:
         # Ensure each dataset is a valid tuple
-        if not isinstance(datasegit t, tuple) or len(dataset) != 2:
+        if not isinstance(dataset, tuple) or len(dataset) != 2:
             print(f"Invalid dataset entry: {dataset}. It must be a tuple (URL, filename).")
             continue
 
@@ -106,7 +106,7 @@ def merge_channel_name(df, df_channels, subscriber_rank=False):
     return df_merged
 
 
-def plot_channel_time_series(df, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
+def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
     """
     Plot specified quantities over time for a given dataset.
 
@@ -117,7 +117,7 @@ def plot_channel_time_series(df, datetime_col, quantities_to_plot, title="Channe
         title (str): Title for the plot. Default is "Channel Time Series Data".
     """
     # Convert to datetime and sort by date
-    df = df.copy()
+    df = df.query("name_cc == 'Taylor Swift'").copy()
     df[datetime_col] = pd.to_datetime(df[datetime_col])
     df = df.sort_values(by=datetime_col)
 
