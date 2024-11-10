@@ -57,8 +57,8 @@ def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbo
         output_dir (str): Output directory to save the files.
     """
     os.makedirs(output_dir, exist_ok=True)
-    channels_by_cat = df.groupby(column)
-    for category, channels in channels_by_cat:
+    df_by_cat = df.groupby(column)
+    for category, group_data in df_by_cat:
         output_file = os.path.join(output_dir, f"{category}.tsv.gz")
         if os.path.exists(output_file):
             if not overwrite:
@@ -68,7 +68,7 @@ def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbo
             else:
                 if verbose:
                     print(f"File '{output_file}' exists and will be overwritten.")
-    channels.to_csv(output_file, sep='\t', index=False, compression='gzip')
+        group_data.to_csv(output_file, sep='\t', index=False, compression='gzip')
 
 
 def cast_df(df):
