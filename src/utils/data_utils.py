@@ -371,11 +371,11 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
 
     for col in numerical_columns:
         plt.figure(figsize=(10, 7))
-        sns.histplot(df[col], bins=30, color='blue', linewidth=0)
+        sns.histplot(df[col], bins=100, color='blue', linewidth=0)
         plt.title(f"Histogram of {col} in the {category_name} category", fontsize=25)
         plt.xlabel(f"Values for {col}", fontsize=20)
         if col == 'videos_cc' or col == 'subscribers_cc':
-            plt.yscale('log')
+            # plt.yscale('log')
             plt.ylabel("Count (log)", fontsize=20)
         else:
             plt.yscale('linear')
@@ -453,12 +453,12 @@ def get_stats_on_video_category(df, category_name, corr_method='spearman'):
 
     for col in numerical_columns:
         plt.figure(figsize=(10, 7))
-        sns.histplot(df[col], bins=30, color='blue', linewidth=0)
+        sns.histplot(df[col] + 1, bins=100, color='blue', log_scale=True, stat='density')
         plt.title(f"Histogram of {col} in the {category_name} category")
         if col == 'like_count' or col == 'view_count':
-            plt.xscale('log')
+            # plt.xscale('log')
             plt.xlabel(f"Values for {col} (log)")
-            plt.yscale('log')
+            # plt.yscale('log')
             plt.ylabel("Count (log)")
         else:
             plt.xscale('linear')
