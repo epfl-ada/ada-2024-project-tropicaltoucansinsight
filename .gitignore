@@ -171,3 +171,4 @@ data/num_comments.tsv.gz
 data/youtube_comments.tsv.gz
 data/time_series.tsv.gz
 data/yt_metadata_en.jsonl.gz
+data/yt_metadata.jsonl.gz
