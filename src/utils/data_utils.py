@@ -127,17 +127,69 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
 
     # Plot
     fig, ax = plt.subplots(figsize=(10, 6))
-    fig.suptitle(title, fontsize=20)
-
+    fig.suptitle(title, fontsize=25)
     for quantity in quantities_to_plot:
         sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=quantity, marker='.', linestyle='-')
-
-    plt.xlabel("Date", fontsize=15)
-    plt.ylabel("Count", fontsize=15)
-    plt.legend(fontsize=15)
+    plt.xlabel("Date", fontsize=20)
+    plt.ylabel("Count", fontsize=20)
+    plt.legend(fontsize=20)
     plt.grid(True, alpha=0.5)
     plt.xlim(df[datetime_col].min(), df[datetime_col].max())
     plt.show()
+
+
+def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist", print_summary=False):
+    """
+    Plots the distribution of the columns in the DataFrame for a specific category.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data
+        columns (list of str): List of columns to plot
+        category (str): Name of the category
+        x_logs (list of bool): List of boolean values indicating if the data will be log-transformed on the x-axis
+        y_logs (list of bool): List of boolean values indicating if the y-axis will be log-scaled for each plot
+        kind (str): Type of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
+        print_summary (bool): if True, prints the summary statistics of the columns
+    """
+    fig, axs = plt.subplots(1, len(columns), figsize=(8 * len(columns), 6))
+
+    # If there's only one column, axs is not a list, so we make it iterable
+    if len(columns) == 1:
+        axs = [axs]
+
+    for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
+        # Apply log transformation if specified
+        data = np.log(df[col] + 1) if x_log else df[col]
+
+        # Plot based on the selected kind
+        if kind == "violin":
+            sns.violinplot(x=data, fill=False, ax=axs[i], linewidth=1)
+        elif kind == "hist":
+            sns.histplot(data, bins=100, ax=axs[i])
+        elif kind == "boxplot":
+            sns.boxplot(x=data, ax=axs[i])
+        elif kind == "kde":
+            sns.kdeplot(data, ax=axs[i])
+        elif kind == "boxenplot":
+            sns.boxenplot(x=data, ax=axs[i])
+
+        # Set plot titles and labels
+        axs[i].set_title(f"Distribution of {col} for the {category} category", fontsize=25)
+        axs[i].set_xlabel(f"{col}", fontsize=20)
+        axs[i].grid(True, alpha=0.5)
+
+        # Apply log scale to the y-axis if specified
+        if y_log:
+            axs[i].set_yscale('log')
+            axs[i].set_ylabel("log(Count)", fontsize=20)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Print summary statistics if required
+    if print_summary:
+        print(f"Summary statistics for the {columns}:")
+        print(df[columns].describe())
 
 
 def cast_df(df):
@@ -222,21 +274,21 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
     for col in numerical_columns:
         plt.figure(figsize=(10, 7))
         sns.histplot(df[col], bins=30, color='blue', linewidth=0)
-        plt.title(f"Histogram of {col} in the {category_name} category")
-        plt.xlabel(f"Values for {col}")
+        plt.title(f"Histogram of {col} in the {category_name} category", fontsize=25)
+        plt.xlabel(f"Values for {col}", fontsize=20)
         if col == 'videos_cc' or col == 'subscribers_cc':
             plt.yscale('log')
-            plt.ylabel("Count (log)")
+            plt.ylabel("Count (log)", fontsize=20)
         else:
             plt.yscale('linear')
-            plt.ylabel("Count")
+            plt.ylabel("Count", fontsize=20)
 
         plt.show()
 
     # Plot the correlation matrix
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
-    plt.title(f"Correlation matrix of numerical columns in the {category_name} category")
+    plt.title(f"Correlation matrix of numerical columns in the {category_name} category", fontsize=25)
     plt.show()
 
     return stats
