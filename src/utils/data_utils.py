@@ -175,7 +175,12 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
 
         # Set plot titles and labels
         axs[i].set_title(f"Distribution of {col} for the {category} category", fontsize=25)
-        axs[i].set_xlabel(f"{col}", fontsize=20)
+
+        if x_log:
+            axs[i].set_xlabel(f"log({col} + 1)", fontsize=20)
+        else:
+            axs[i].set_xlabel(f"{col}", fontsize=20)
+        axs[i].set_ylabel("Count", fontsize=20)
         axs[i].grid(True, alpha=0.5)
 
         # Apply log scale to the y-axis if specified
@@ -190,6 +195,61 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
     if print_summary:
         print(f"Summary statistics for the {columns}:")
         print(df[columns].describe())
+
+
+def compare_distribution_across_categories(df, columns, categories, x_logs, y_logs, kind="hist"):
+    """
+    Plot the distribution of the columns for the given categories.
+
+    Args:
+        df (pd.DataFrame): The dataframe containing the data from all categories
+        columns (list of str): The columns to plot
+        categories (list of str): The categories to plot
+        x_logs (list of bool): Whether to log-transform the x-axis data for each column
+        y_logs (list of bool): Whether to log-scale the y-axis for each plot
+        kind (str): The kind of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
+    """
+    df = df.copy()
+
+    # Filter for the selected categories
+    df = df[df["category"].isin(categories)]
+
+    # Create a plot for each column (i.e. for each feature)
+    fig, axs = plt.subplots(1, len(columns), figsize=(len(columns) * 8, 6))
+
+    # If there's only one column, axs is not a list, so we make it iterable
+    if len(columns) == 1:
+        axs = [axs]
+
+    for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
+        # Apply log transformation if specified
+        df[col] = np.log(df[col] + 1) if x_log else df[col]
+
+        # Plot based on the selected kind
+        if kind == "hist":
+            sns.histplot(data=df, x=col, hue="category", bins=100, kde=True, ax=axs[i], alpha=0.3)
+        elif kind == "violin":
+            sns.violinplot(data=df, x="category", y=col, ax=axs[i])
+        elif kind == "boxplot":
+            sns.boxplot(data=df, x="category", hue="category", y=col, ax=axs[i])
+        elif kind == "kde":
+            sns.kdeplot(data=df, x=col, hue="category", ax=axs[i])
+        elif kind == "boxenplot":
+            sns.boxenplot(data=df, x="category", hue="category", y=col, ax=axs[i])
+        else:
+            raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
+
+        # Set titles and labels
+        axs[i].set_title(f"Distribution of {col} across {', '.join(categories)}", fontsize=20)
+        axs[i].set_xlabel(f"log({col} + 1)" if x_log else col, fontsize=16)
+        axs[i].set_ylabel("Count" if not y_log else "log(Count)", fontsize=16)
+
+        # Apply y-axis log scale if specified
+        if y_log:
+            axs[i].set_yscale('log')
+
+    plt.tight_layout()
+    plt.show()
 
 
 def cast_channels_df(df):
