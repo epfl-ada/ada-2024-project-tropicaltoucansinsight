@@ -17,9 +17,10 @@ import matplotlib.pyplot as plt
 def get_data(datasets, target_dir="data"):
     """
     Download the specified datasets from the web and save them in the target directory.
-    
-    :param datasets: (list of tuples) A list where each tuple contains is a pair of (URL, filename).
-    :param target_dir: (str) The directory where the downloaded files will be saved.
+
+    Args:
+        datasets (list of tuples): A list where each tuple contains is a pair of (URL, filename).
+        target_dir (str): The directory where the downloaded files will be saved.
     """
     # Create the target directory if it doesn't exist
     os.makedirs(target_dir, exist_ok=True)
@@ -51,9 +52,10 @@ def save_data_grouped_by_category(df, column, output_dir):
     """
     Groups the channels by category and saves them to separate files.
 
-    :param df: DataFrame containing the channel data.
-    :param column: (str) Column name to group the data by.
-    :param output_dir: (str) Output directory to save the files.
+    Args:
+        df (pd.DataFrame): DataFrame containing the channel data.
+        column (str): Column name to group the data by.
+        output_dir (str): Output directory to save the files.
     """
     os.makedirs(output_dir, exist_ok=True)
     channels_by_cat = df.groupby(column)
@@ -66,8 +68,11 @@ def get_stats_on_channel_category(data):
     """
     Get basic statistics on YouTube channels in a certain category.
 
-    :param data (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
-    :return (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each channel category.
+    Args:
+        data (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
+
+    Returns:
+        df_stats (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each channel category.
     """
 
 
@@ -77,6 +82,9 @@ def get_stats_on_video_category(data):
     """
     Get basic statistics on YouTube videos in a certain category.
 
-    :param data (pd.DataFrame): Dataset containing the information of YouTube videos in a given category.
-    :return (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each video category.
+    Args:
+        data (pd.DataFrame): Dataset containing the information of YouTube videos in a given category.
+
+    Returns:
+        df_stats (pd.DataFrame): DataFrame with statistical summaries (e.g., count, average views) for each video category.
     """
