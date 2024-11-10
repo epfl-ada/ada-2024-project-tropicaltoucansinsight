@@ -106,7 +106,7 @@ def merge_channel_name(df, df_channels, subscriber_rank=False):
     return df_merged
 
 
-def plot_channel_time_series(df, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
+def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
     """
     Plot specified quantities over time for a given dataset.
 
@@ -117,7 +117,7 @@ def plot_channel_time_series(df, datetime_col, quantities_to_plot, title="Channe
         title (str): Title for the plot. Default is "Channel Time Series Data".
     """
     # Convert to datetime and sort by date
-    df = df.query("name_cc == 'Taylor Swift'").copy()
+    df = df.query(f"name_cc == '{channel_name}'").copy()
     df[datetime_col] = pd.to_datetime(df[datetime_col])
     df = df.sort_values(by=datetime_col)
 
@@ -151,7 +151,7 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         kind (str): Type of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         print_summary (bool): if True, prints the summary statistics of the columns
     """
-    fig, axs = plt.subplots(1, len(columns), figsize=(8 * len(columns), 6))
+    fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
 
     # If there's only one column, axs is not a list, so we make it iterable
     if len(columns) == 1:
@@ -215,7 +215,7 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
     df = df[df["category"].isin(categories)]
 
     # Create a plot for each column (i.e. for each feature)
-    fig, axs = plt.subplots(1, len(columns), figsize=(len(columns) * 8, 6))
+    fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
 
     # If there's only one column, axs is not a list, so we make it iterable
     if len(columns) == 1:
