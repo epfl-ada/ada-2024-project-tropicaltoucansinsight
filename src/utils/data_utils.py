@@ -106,7 +106,8 @@ def merge_channel_name(df, df_channels, subscriber_rank=False):
     return df_merged
 
 
-def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot, title="Channel Time Series Data"):
+def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot, normalize=True,
+                             palette="tab10", markers=["."], title="Channel Time Series Data"):
     """
     Plot specified quantities over time for a given dataset.
 
@@ -122,17 +123,23 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
     df = df.sort_values(by=datetime_col)
 
     # Normalize specified quantities
-    for quantity in quantities_to_plot:
-        df[quantity] = df[quantity] - df[quantity].min()
+    if normalize:
+        for quantity in quantities_to_plot:
+            df[quantity] = (df[quantity] - df[quantity].min()) / (df[quantity].max() - df[quantity].min())
 
     # Plot
     fig, ax = plt.subplots(figsize=(10, 6))
+    colors = sns.color_palette(palette, len(quantities_to_plot))
     fig.suptitle(title, fontsize=25)
-    for quantity in quantities_to_plot:
-        sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=quantity, marker='.', linestyle='-')
+    for i, quantity in enumerate(quantities_to_plot):
+        sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=quantity, linestyle='-', markers=True,
+                     marker=markers[i % len(markers)], color=colors[i % len(colors)], markeredgecolor='black',
+                     markeredgewidth=0.3, linewidth=2)
     plt.xlabel("Date", fontsize=20)
     plt.ylabel("Count", fontsize=20)
-    plt.legend(fontsize=20)
+    if normalize:
+        plt.ylabel("Normalized Count", fontsize=20)
+    plt.legend(fontsize=20, bbox_to_anchor=(1, 1), loc='upper left')
     plt.grid(True, alpha=0.5)
     plt.xlim(df[datetime_col].min(), df[datetime_col].max())
     plt.show()
@@ -177,7 +184,7 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         axs[i].set_title(f"Distribution of {col} for the {category} category", fontsize=25)
 
         if x_log:
-            axs[i].set_xlabel(f"log({col} + 1)", fontsize=20)
+            axs[i].set_xlabel(fr"$\log$({col} + 1)", fontsize=20)
         else:
             axs[i].set_xlabel(f"{col}", fontsize=20)
         axs[i].set_ylabel("Count", fontsize=20)
@@ -186,7 +193,7 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         # Apply log scale to the y-axis if specified
         if y_log:
             axs[i].set_yscale('log')
-            axs[i].set_ylabel("log(Count)", fontsize=20)
+            axs[i].set_ylabel(r"$\log$(Count)", fontsize=20)
 
     plt.tight_layout()
     plt.show()
@@ -227,7 +234,10 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
 
         # Plot based on the selected kind
         if kind == "hist":
-            sns.histplot(data=df, x=col, hue="category", bins=100, kde=True, ax=axs[i], alpha=0.3)
+            kde = True
+            if y_log:
+                kde = False
+            sns.histplot(data=df, x=col, hue="category", bins=100, kde=kde, ax=axs[i], alpha=0.3)
         elif kind == "violin":
             sns.violinplot(data=df, x="category", y=col, ax=axs[i])
         elif kind == "boxplot":
@@ -241,8 +251,8 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
 
         # Set titles and labels
         axs[i].set_title(f"Distribution of {col} across {', '.join(categories)}", fontsize=20)
-        axs[i].set_xlabel(f"log({col} + 1)" if x_log else col, fontsize=16)
-        axs[i].set_ylabel("Count" if not y_log else "log(Count)", fontsize=16)
+        axs[i].set_xlabel(fr"$\log$({col} + 1)" if x_log else col, fontsize=16)
+        axs[i].set_ylabel("Count" if not y_log else r"$\log$(Count)", fontsize=16)
 
         # Apply y-axis log scale if specified
         if y_log:
