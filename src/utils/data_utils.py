@@ -270,7 +270,7 @@ def cast_df(df, type):
 
     Args:
         df (pd.DataFrame): The DataFrame to be processed.
-        type (str): The type of the DataFrame to cast to (either 'channel' or 'video').
+        type (str): The type of the DataFrame to cast to (either 'channel' or 'video_metadata', 'time_series').
 
     Returns:
         new_df (pd.DataFrame): The new DataFrame with updated types.
@@ -287,12 +287,17 @@ def cast_df(df, type):
 
     if type == 'channel':
         # Convert the join_date column to datetime
-        df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce')
+        df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce').dt.floor('D')
 
-    elif type == 'video':
+    elif type == 'video_metadata':
         # Convert the crawl_date and upload_date columns to datetime
-        df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce')
-        df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce')
+        if 'crawl_date' in df.columns:
+            df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce').dt.floor('S')
+        df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce').dt.floor('D')
+
+    elif type == 'time_series':
+        # Convert the date column to datetime
+        df["datetime"] = pd.to_datetime(df["datetime"], format='mixed', errors='coerce').dt.floor('D')
 
     # Convert the columns to string when type is object
     df = df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x)
@@ -306,7 +311,7 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
 
     Args:
         df (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
-        type (str): The type of the DataFrame to cast to (either 'channel' or 'video').
+        type (str): The type of the DataFrame to cast to (either 'channel' or 'video_metadata').
         category_name (str): Name of the category to analyze.
         corr_method (str): The method to compute the correlation matrix.
 
@@ -320,7 +325,7 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
         print(f"Displaying statistics to study the YouTube channels in the category: {category_name}", end='\n\n')
         print(f"The category {category_name} consists of {df.shape[0]} channels.", end='\n')
 
-    elif type == 'video':
+    elif type == 'video_metadata':
         print(f"Displaying statistics to study the YouTube videos in the category: {category_name}", end='\n\n')
         print(f"The category {category_name} consists of {df.shape[0]} videos.", end='\n')
 
@@ -359,7 +364,7 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
     if type == 'channel':
         df['year'] = df['join_date'].dt.year
         df['month'] = df['join_date'].dt.month
-    elif type == 'video':
+    elif type == 'video_metadata':
         df['upload_year'] = df['upload_date'].dt.year
         df['upload_month'] = df['upload_date'].dt.month
 
