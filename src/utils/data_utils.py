@@ -262,13 +262,14 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
     plt.show()
 
 
-def cast_channels_df(df):
+def cast_df(df, type):
     """
-    For a dataframe of channels, downcast numerical columns to lower precision types, convert date columns to datetime,
+    For a dataframe of channels or videos, downcast numerical columns to lower precision types, convert date columns to datetime,
     and convert object columns to string type for memory optimization.
 
     Args:
         df (pd.DataFrame): The DataFrame to be processed.
+        type (str): The type of the DataFrame to cast to (either 'channel' or 'video').
 
     Returns:
         new_df (pd.DataFrame): The new DataFrame with updated types.
@@ -283,8 +284,14 @@ def cast_channels_df(df):
     for col in df.select_dtypes(include=['float64']).columns:
         df[col] = pd.to_numeric(df[col], downcast='float')
 
-    # Convert the join_date column to datetime
-    df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce')
+    if type == 'channel':
+        # Convert the join_date column to datetime
+        df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce')
+
+    elif type == 'video':
+        # Convert the crawl_date and upload_date columns to datetime
+        df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce')
+        df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce')
 
     # Convert the columns to string when type is object
     df = df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x)
@@ -292,42 +299,13 @@ def cast_channels_df(df):
     return df
 
 
-def cast_videos_df(df):
-    """
-    For a dataframe of videos, downcast numerical columns to lower precision types, convert date columns to datetime,
-    and convert object columns to string type for memory optimization.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to be processed.
-
-    Returns:
-        new_df (pd.DataFrame): The new DataFrame with updated types.
-    """
-    # Deep copy to not modify the initial data
-    df = df.copy(deep=True)
-
-    # Downcast the numbers from 64 to 32 bits for less memory usage
-    for col in df.select_dtypes(include=['int64']).columns:
-        df[col] = pd.to_numeric(df[col], downcast='integer')
-
-    for col in df.select_dtypes(include=['float64']).columns:
-        df[col] = pd.to_numeric(df[col], downcast='float')
-
-    # Convert the crawl_date and upload_date columns to datetime
-    df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce')
-    df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce')
-
-    # Convert the columns to string when type is object
-    df = df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x)
-
-    return df
-
-def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
+def get_stats_on_category(df, type, category_name, corr_method='spearman'):
     """
     Get basic statistics on YouTube channels in a certain category.
 
     Args:
         df (pd.DataFrame): Dataset containing the information of YouTube channels in a given category.
+        type (str): The type of the DataFrame to cast to (either 'channel' or 'video').
         category_name (str): Name of the category to analyze.
         corr_method (str): The method to compute the correlation matrix.
 
@@ -337,9 +315,12 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
     # Deep copy to not modify the initial data
     df = df.copy(deep=True)
 
-    print(f"Displaying statistics to study the YouTube channels in the category: {category_name}", end='\n\n')
-
-    print(f"The category {category_name} consists of {df.shape[0]} channels.", end='\n')
+    if type == 'channel':
+        print(f"Displaying statistics to study the YouTube channels in the category: {category_name}", end='\n\n')
+        print(f"The category {category_name} consists of {df.shape[0]} channels.", end='\n')
+    elif type == 'video':
+        print(f"Displaying statistics to study the YouTube videos in the category: {category_name}", end='\n\n')
+        print(f"The category {category_name} consists of {df.shape[0]} videos.", end='\n')
 
     # Get the memory usage of the loaded dataframe
     memory_bytes = df.memory_usage(deep=True).sum()
@@ -373,22 +354,25 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
     print(stats)
 
     # Extract the year and the month from the datetime column
-    df['year'] = df['join_date'].dt.year
-    df['month'] = df['join_date'].dt.month
+    if type == 'channel':
+        df['year'] = df['join_date'].dt.year
+        df['month'] = df['join_date'].dt.month
+    elif type == 'video':
+        df['upload_year'] = df['upload_date'].dt.year
+        df['upload_month'] = df['upload_date'].dt.month
 
     # Plot histograms for numerical columns
     numerical_columns = df.select_dtypes(include=['integer', 'float']).columns
 
     for col in numerical_columns:
         plt.figure(figsize=(10, 7))
-        sns.histplot(df[col], bins=100, color='blue', linewidth=0)
         plt.title(f"Histogram of {col} in the {category_name} category", fontsize=25)
         plt.xlabel(f"Values for {col}", fontsize=20)
-        if col == 'videos_cc' or col == 'subscribers_cc':
-            # plt.yscale('log')
+        if col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or col == 'view_count':
+            sns.histplot(df[col], bins=100, color='blue', linewidth=0, log_scale=True)
             plt.ylabel("Count (log)", fontsize=20)
         else:
-            plt.yscale('linear')
+            sns.histplot(df[col], bins=100, color='blue', linewidth=0)
             plt.ylabel("Count", fontsize=20)
 
         plt.show()
@@ -397,90 +381,6 @@ def get_stats_on_channel_category(df, category_name, corr_method='spearman'):
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
     plt.title(f"Correlation matrix of numerical columns in the {category_name} category", fontsize=25)
-    plt.show()
-
-    return stats
-
-
-def get_stats_on_video_category(df, category_name, corr_method='spearman'):
-    """
-    Get basic statistics on YouTube videos in a certain category.
-
-    Args:
-        df (pd.DataFrame): Dataset containing the information of YouTube videos in a given category.
-        category_name (str): Name of the category to analyze.
-        corr_method (str): The method to compute the correlation matrix.
-
-    Returns:
-        df_stats (pd.DataFrame): DataFrame with statistical summaries for the videos in the category.
-    """
-    # Deep copy to not modify the initial data
-    df = df.copy(deep=True)
-
-    print(f"Displaying statistics to study the YouTube videos in the category: {category_name}", end='\n\n')
-
-    print(f"The category {category_name} consists of {df.shape[0]} videos.", end='\n')
-
-    # Get the memory usage of the loaded dataframe
-    memory_bytes = df.memory_usage(deep=True).sum()
-    memory_mb = memory_bytes / (2 ** 20)  # As 1 MB = 2^20 bytes
-    print(f"The DataFrame occupies {memory_mb:.2f} MB.", end='\n\n')
-
-    # Get the count and percentage of missing values
-    missing_count = df.isnull().sum()
-    missing_percentage = (missing_count / len(df)) * 100
-
-    missing_data = pd.DataFrame({
-        'Missing values': missing_count,
-        'Percentage missing': missing_percentage
-    })
-
-    # Get the descriptive statistics for numerical columns
-    desc = df.describe().transpose()
-
-    # Get the types of each column
-    column_types = df.dtypes
-
-    # Concatenate the descriptive stats, missing data stats, and column types
-    stats = pd.concat([desc, missing_data, column_types.rename('Type')], axis=1)
-
-    # Ensure the columns are in the right order: statistics followed by missing data stats and types
-    stats = stats[
-        ['Type', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'Missing values', 'Percentage missing']]
-
-    # Print out the stats
-    print(f"Descriptive statistics for the {category_name} category:")
-    print(stats)
-
-    # Extract the year and the month from the datetime columns
-    # df['crawl_year'] = df['crawl_date'].dt.year
-    # df['crawl_month'] = df['crawl_date'].dt.month
-    df['upload_year'] = df['upload_date'].dt.year
-    df['upload_month'] = df['upload_date'].dt.month
-
-    # Plot histograms for numerical columns
-    numerical_columns = df.select_dtypes(include=['integer', 'float']).columns
-
-    for col in numerical_columns:
-        plt.figure(figsize=(10, 7))
-        sns.histplot(df[col] + 1, bins=100, color='blue', log_scale=True, stat='density')
-        plt.title(f"Histogram of {col} in the {category_name} category")
-        if col == 'like_count' or col == 'view_count':
-            # plt.xscale('log')
-            plt.xlabel(f"Values for {col} (log)")
-            # plt.yscale('log')
-            plt.ylabel("Count (log)")
-        else:
-            plt.xscale('linear')
-            plt.xlabel(f"Values for {col}")
-            plt.yscale('linear')
-            plt.ylabel("Count")
-        plt.show()
-
-    # Plot the correlation matrix
-    corr_matrix = df[numerical_columns].corr(method=corr_method)
-    sns.heatmap(corr_matrix, annot=True)
-    plt.title(f"Correlation matrix of numerical columns in the {category_name} category")
     plt.show()
 
     return stats
