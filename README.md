@@ -88,4 +88,17 @@ gantt
     section Etape 5 : Présentation finale
     Préparation de la présentation           :         pres1, after redac2, 5d
     Soutenance                               :         pres2, after pres1, 1d
+```
+
+
+# Flowchart test
+```mermaid
+flowchart TD
+    A[Début] --> B[Étape 1 : Recherche]
+    B --> C{Est-ce validé ?}
+    C -- Oui --> D[Étape 2 : Analyse]
+    C -- Non --> E[Réviser]
+    E --> B
+    D --> F[Fin]
+```
 
