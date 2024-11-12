@@ -59,3 +59,33 @@ File containing the detailed project proposal (up to 1000 words)
 - Proposed timeline
 - Organization within the team: A list of internal milestones up until project Milestone P3.
 - Questions for TAs (optional): Add here any questions you have for us related to the proposed project.
+
+# Plan de projet (test)
+
+Voici le diagramme de Gantt pour le projet :
+
+```mermaid
+gantt
+    title Diagramme de Gantt du Projet
+
+    section Etape 1 : Recherche de littérature
+    Lecture et sélection des articles        :done,     des1, 2024-11-01, 10d
+    Rédaction de la section état de l'art    :active,   des2, after des1, 10d
+
+    section Etape 2 : Formulation des hypothèses
+    Identification des hypothèses            :         hyp1, after des2, 5d
+    Rédaction de la section hypothèses       :         hyp2, after hyp1, 7d
+
+    section Etape 3 : Analyse des données
+    Préparation et nettoyage des données     :         data1, 2024-11-20, 10d
+    Analyse exploratoire                     :         data2, after data1, 10d
+    Modélisation et test des hypothèses      :         data3, after data2, 10d
+
+    section Etape 4 : Rédaction et révisions
+    Rédaction du mémoire                     :         redac1, after data3, 20d
+    Révision et corrections                  :         redac2, after redac1, 10d
+
+    section Etape 5 : Présentation finale
+    Préparation de la présentation           :         pres1, after redac2, 5d
+    Soutenance                               :         pres2, after pres1, 1d
+
