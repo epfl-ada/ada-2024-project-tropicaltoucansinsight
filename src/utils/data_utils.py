@@ -204,7 +204,7 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         print(df[columns].describe())
 
 
-def compare_distribution_across_categories(df, columns, categories, x_logs, y_logs, kind="hist"):
+def compare_distribution_across_categories(df, columns, categories, x_logs, y_logs, kind="hist", hue='category'):
     """
     Plot the distribution of the columns for the given categories.
 
@@ -215,11 +215,12 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
         x_logs (list of bool): Whether to log-transform the x-axis data for each column
         y_logs (list of bool): Whether to log-scale the y-axis for each plot
         kind (str): The kind of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
+        hue (str): The name of the column with the categories
     """
     df = df.copy()
 
     # Filter for the selected categories
-    df = df[df["category"].isin(categories)]
+    df = df[df[hue].isin(categories)]
 
     # Create a plot for each column (i.e. for each feature)
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
@@ -237,15 +238,15 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
             kde = True
             if y_log:
                 kde = False
-            sns.histplot(data=df, x=col, hue="category", bins=100, kde=kde, ax=axs[i], alpha=0.3)
+            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3)
         elif kind == "violin":
-            sns.violinplot(data=df, x="category", y=col, ax=axs[i])
+            sns.violinplot(data=df, x=hue, y=col, ax=axs[i])
         elif kind == "boxplot":
-            sns.boxplot(data=df, x="category", hue="category", y=col, ax=axs[i])
+            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i])
         elif kind == "kde":
-            sns.kdeplot(data=df, x=col, hue="category", ax=axs[i])
+            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i])
         elif kind == "boxenplot":
-            sns.boxenplot(data=df, x="category", hue="category", y=col, ax=axs[i])
+            sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i])
         else:
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
@@ -318,6 +319,7 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
     if type == 'channel':
         print(f"Displaying statistics to study the YouTube channels in the category: {category_name}", end='\n\n')
         print(f"The category {category_name} consists of {df.shape[0]} channels.", end='\n')
+
     elif type == 'video':
         print(f"Displaying statistics to study the YouTube videos in the category: {category_name}", end='\n\n')
         print(f"The category {category_name} consists of {df.shape[0]} videos.", end='\n')
@@ -366,16 +368,22 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
 
     for col in numerical_columns:
         plt.figure(figsize=(10, 7))
-        plt.title(f"Histogram of {col} in the {category_name} category", fontsize=25)
-        plt.xlabel(f"Values for {col}", fontsize=20)
-        if col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or col == 'view_count':
-            sns.histplot(df[col], bins=100, color='blue', linewidth=0, log_scale=True)
-            plt.ylabel("Count (log)", fontsize=20)
-        else:
-            sns.histplot(df[col], bins=100, color='blue', linewidth=0)
-            plt.ylabel("Count", fontsize=20)
 
-        plt.show()
+        plt.xlabel(f"{col}", fontsize=20)
+        plt.ylabel("Count", fontsize=20)
+        if (col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or
+                col == 'view_count' or col == 'dislike_count' or col == 'duration'):
+            plt.title(f"Histogram of {col} in the \n{category_name} category (log scale)", fontsize=25)
+            sns.histplot(df[col], bins=100, color='blue', linewidth=0, log_scale=True)
+            if col == 'dislike_count':  # TODO: voir si on garde plus tard ou pas
+                plt.yscale('log')
+        else:
+            plt.title(f"Histogram of {col} in the \n{category_name} category", fontsize=25)
+            sns.histplot(df[col], bins=100, color='blue', linewidth=0)
+
+
+    plt.show()
+
 
     # Plot the correlation matrix
     corr_matrix = df[numerical_columns].corr(method=corr_method)
