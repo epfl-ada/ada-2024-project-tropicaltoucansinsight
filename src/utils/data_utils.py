@@ -292,7 +292,7 @@ def cast_df(df, type):
     elif type == 'video_metadata':
         # Convert the crawl_date and upload_date columns to datetime
         if 'crawl_date' in df.columns:
-            df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce').dt.floor('S')
+            df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce').dt.floor('s')
         df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce').dt.floor('D')
 
     elif type == 'time_series':
