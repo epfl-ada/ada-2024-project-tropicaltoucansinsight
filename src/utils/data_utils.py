@@ -127,12 +127,19 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
         for quantity in quantities_to_plot:
             df[quantity] = (df[quantity] - df[quantity].min()) / (df[quantity].max() - df[quantity].min())
 
+    custom_labels = {
+        "views": "Views",
+        "subs": "Subscribers",
+        "delta_views": r"$\Delta$(views)",
+        "delta_subs": r"$\Delta$(subs)"
+    }
+
     # Plot
     fig, ax = plt.subplots(figsize=(10, 6))
     colors = sns.color_palette(palette, len(quantities_to_plot))
     fig.suptitle(title, fontsize=25)
     for i, quantity in enumerate(quantities_to_plot):
-        sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=quantity, linestyle='-', markers=True,
+        sns.lineplot(data=df, x=datetime_col, y=quantity, ax=ax, label=custom_labels.get(quantity, quantity), linestyle='-', markers=True,
                      marker=markers[i % len(markers)], color=colors[i % len(colors)], markeredgecolor='black',
                      markeredgewidth=0.3, linewidth=2)
     plt.xlabel("Date", fontsize=20)
@@ -142,6 +149,7 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
     plt.legend(fontsize=20, bbox_to_anchor=(1, 1), loc='upper left')
     plt.grid(True, alpha=0.5)
     plt.xlim(df[datetime_col].min(), df[datetime_col].max())
+    plt.xticks(rotation=60)
     plt.show()
 
 
@@ -158,6 +166,15 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         kind (str): Type of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         print_summary (bool): if True, prints the summary statistics of the columns
     """
+
+    custom_labels = {
+        "views": "Views",
+        "subs": "Subscribers",
+        "delta_views": r"$\Delta$(views)",
+        "delta_subs": r"$\Delta$(subs)",
+        "delta_videos": r"$\Delta$(videos)"
+    }
+
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
 
     # If there's only one column, axs is not a list, so we make it iterable
@@ -170,23 +187,24 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
 
         # Plot based on the selected kind
         if kind == "violin":
-            sns.violinplot(x=data, fill=False, ax=axs[i], linewidth=1)
+            sns.violinplot(x=data, fill=False, ax=axs[i], linewidth=1, label=custom_labels.get(col, col))
         elif kind == "hist":
-            sns.histplot(data, bins=100, ax=axs[i])
+            sns.histplot(data, bins=100, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "boxplot":
-            sns.boxplot(x=data, ax=axs[i])
+            sns.boxplot(x=data, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "kde":
-            sns.kdeplot(data, ax=axs[i])
+            sns.kdeplot(data, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "boxenplot":
-            sns.boxenplot(x=data, ax=axs[i])
+            sns.boxenplot(x=data, ax=axs[i], label=custom_labels.get(col, col))
 
         # Set plot titles and labels
-        axs[i].set_title(f"Distribution of {col} for the {category} category", fontsize=25)
+        axs[i].set_title(f"Distribution of {custom_labels[col]} \nfor the {category} category", fontsize=25)
 
         if x_log:
-            axs[i].set_xlabel(fr"$\log$({col} + 1)", fontsize=20)
+            axs[i].set_xlabel(fr"$\log$({custom_labels[col]} + 1)", fontsize=20)
         else:
-            axs[i].set_xlabel(f"{col}", fontsize=20)
+            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=20)
+
         axs[i].set_ylabel("Count", fontsize=20)
         axs[i].grid(True, alpha=0.5)
 
@@ -204,12 +222,12 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         print(df[columns].describe())
 
 
-def compare_distribution_across_categories(df, columns, categories, x_logs, y_logs, kind="hist", hue='category'):
+def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category'):
     """
     Plot the distribution of the columns for the given categories.
 
     Args:
-        df (pd.DataFrame): The dataframe containing the data from all categories
+        df_data (pd.DataFrame): The dataframe containing the data from all categories
         columns (list of str): The columns to plot
         categories (list of str): The categories to plot
         x_logs (list of bool): Whether to log-transform the x-axis data for each column
@@ -217,13 +235,20 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
         kind (str): The kind of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         hue (str): The name of the column with the categories
     """
-    df = df.copy()
-
     # Filter for the selected categories
-    df = df[df[hue].isin(categories)]
+    df = df_data[df_data[hue].isin(categories)]
 
     # Create a plot for each column (i.e. for each feature)
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
+
+    custom_labels = {
+        "views": "Views",
+        "subs": "Subscribers",
+        "videos": "Videos",
+        "delta_views": r"$\Delta$(views)",
+        "delta_subs": r"$\Delta$(subs)",
+        "delta_videos": r"$\Delta$(videos)"
+    }
 
     # If there's only one column, axs is not a list, so we make it iterable
     if len(columns) == 1:
@@ -231,28 +256,28 @@ def compare_distribution_across_categories(df, columns, categories, x_logs, y_lo
 
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         # Apply log transformation if specified
-        df[col] = np.log(df[col] + 1) if x_log else df[col]
+        df[col] = (df[col] + 1) if x_log else df[col]
 
         # Plot based on the selected kind
         if kind == "hist":
             kde = True
             if y_log:
                 kde = False
-            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3)
+            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "violin":
-            sns.violinplot(data=df, x=hue, y=col, ax=axs[i])
+            sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "boxplot":
-            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i])
+            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "kde":
-            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i])
+            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col))
         elif kind == "boxenplot":
-            sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i])
+            sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
         else:
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set titles and labels
-        axs[i].set_title(f"Distribution of {col} across {', '.join(categories)}", fontsize=20)
-        axs[i].set_xlabel(fr"$\log$({col} + 1)" if x_log else col, fontsize=16)
+        axs[i].set_title(f"Distribution of {custom_labels[col]} across {', '.join(categories)}", fontsize=20)
+        axs[i].set_xlabel(fr"$\log$({custom_labels[col]} + 1)" if x_log else col, fontsize=16)
         axs[i].set_ylabel("Count" if not y_log else r"$\log$(Count)", fontsize=16)
 
         # Apply y-axis log scale if specified
@@ -287,17 +312,17 @@ def cast_df(df, type):
 
     if type == 'channel':
         # Convert the join_date column to datetime
-        df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce').dt.floor('D')
+        df["join_date"] = pd.to_datetime(df["join_date"], format='mixed', errors='coerce')
 
     elif type == 'video_metadata':
         # Convert the crawl_date and upload_date columns to datetime
         if 'crawl_date' in df.columns:
-            df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce').dt.floor('s')
-        df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce').dt.floor('D')
+            df["crawl_date"] = pd.to_datetime(df["crawl_date"], format='mixed', errors='coerce')
+        df["upload_date"] = pd.to_datetime(df["upload_date"], format='mixed', errors='coerce')
 
     elif type == 'time_series':
         # Convert the date column to datetime
-        df["datetime"] = pd.to_datetime(df["datetime"], format='mixed', errors='coerce').dt.floor('D')
+        df["datetime"] = pd.to_datetime(df["datetime"], format='mixed', errors='coerce')
 
     # Convert the columns to string when type is object
     df = df.apply(lambda x: x.astype('string') if x.dtype == 'object' else x)
@@ -305,7 +330,7 @@ def cast_df(df, type):
     return df
 
 
-def get_stats_on_category(df, type, category_name, corr_method='spearman'):
+def get_stats_on_category(df, type, category_name, corr_method='spearman', verbose=True):
     """
     Get basic statistics on YouTube channels in a certain category.
 
@@ -357,8 +382,9 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
         ['Type', 'count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'Missing values', 'Percentage missing']]
 
     # Print out the stats
-    print(f"Descriptive statistics for the {category_name} category:")
-    print(stats)
+    if verbose:
+        print(f"Descriptive statistics for the {category_name} category:")
+        print(stats)
 
     # Extract the year and the month from the datetime column
     if type == 'channel':
@@ -371,29 +397,48 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman'):
     # Plot histograms for numerical columns
     numerical_columns = df.select_dtypes(include=['integer', 'float']).columns
 
-    for col in numerical_columns:
-        plt.figure(figsize=(10, 7))
+    custom_labels = {
+        "videos_cc": "Number of Videos",
+        "subscribers_cc": "Number of Subscribers",
+        "like_count": "Number of Likes",
+        "view_count": "Number of Views",
+        "dislike_count": "Number of Dislikes",
+        "duration": "Durations",
+        "year": "Join Year",
+        "month": "Join Month",
+        "upload_year": "Upload Year",
+        "upload_month": "Upload Month",
+        "weights": "Weights",
+        "subscriber_rank_sb": "Subscriber Rank",
+        "join_date": "Join Date"
+    }
 
-        plt.xlabel(f"{col}", fontsize=20)
-        plt.ylabel("Count", fontsize=20)
+    for col in numerical_columns:
+        plt.figure(figsize=(8, 6))
         if (col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or
                 col == 'view_count' or col == 'dislike_count' or col == 'duration'):
-            plt.title(f"Histogram of {col} in the \n{category_name} category (log scale)", fontsize=25)
-            sns.histplot(df[col], bins=100, color='blue', linewidth=0, log_scale=True)
+            sns.histplot(df[col], bins=100, log_scale=True)
+            plt.title(f"Histogram of {custom_labels[col]} \nin the {category_name} Category", fontsize=25)
+            plt.xlabel(f"{custom_labels[col]}", fontsize=20)
+            plt.ylabel("Count", fontsize=20)
+
             if col == 'dislike_count':  # TODO: voir si on garde plus tard ou pas
                 plt.yscale('log')
+
         else:
-            plt.title(f"Histogram of {col} in the \n{category_name} category", fontsize=25)
-            sns.histplot(df[col], bins=100, color='blue', linewidth=0)
+            sns.histplot(df[col], bins=100)
+            plt.xlabel(f"{custom_labels[col]}", fontsize=20)
+            plt.ylabel("Count", fontsize=20)
+            plt.title(f"Histogram of {custom_labels[col]} \nin the {category_name} category", fontsize=25)
+
 
 
     plt.show()
 
-
     # Plot the correlation matrix
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
-    plt.title(f"Correlation matrix of numerical columns in the {category_name} category", fontsize=25)
+    plt.title(f"Correlation matrix of numerical columns \nin the {category_name} category", fontsize=25)
     plt.show()
 
     return stats
