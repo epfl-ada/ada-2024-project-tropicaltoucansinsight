@@ -28,7 +28,8 @@ matplotlib.rcParams['xtick.major.size'] = 8      # X-axis major tick size
 matplotlib.rcParams['ytick.major.size'] = 8      # Y-axis major tick size
 
 # Customize legend
-matplotlib.rcParams['legend.fontsize'] = 22      # Legend font size
+matplotlib.rcParams['legend.title_fontsize'] = 22 # Legend title font size
+matplotlib.rcParams['legend.fontsize'] = 20      # Legend font size
 matplotlib.rcParams['legend.frameon'] = True     # Enable/Disable the frame around the legend
 
 # Customize grid

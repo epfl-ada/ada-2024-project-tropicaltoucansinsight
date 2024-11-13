@@ -222,6 +222,10 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         print(df[columns].describe())
 
 
+def upper_case_first_letter(s):
+    return s[0].upper() + s[1:]
+
+
 def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category'):
     """
     Plot the distribution of the columns for the given categories.
@@ -236,10 +240,12 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         hue (str): The name of the column with the categories
     """
     # Filter for the selected categories
-    df = df_data[df_data[hue].isin(categories)]
+    df = df_data[df_data[hue].isin(categories)].copy()
+    df = df.rename(columns={hue: upper_case_first_letter(hue)})
+    hue = upper_case_first_letter(hue)
 
     # Create a plot for each column (i.e. for each feature)
-    fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
+    fig, axs = plt.subplots(len(columns), 1, figsize=(12, 6 * len(columns)))
 
     custom_labels = {
         "views": "Views",
@@ -255,29 +261,29 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         axs = [axs]
 
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
-        # Apply log transformation if specified
-        df[col] = (df[col] + 1) if x_log else df[col]
+        # Avoid log(0) by adding 1
+        if x_log:
+            df.loc[:, col] = df[col] + 1
 
-        # Plot based on the selected kind
         if kind == "hist":
             kde = True
             if y_log:
                 kde = False
-            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, label=custom_labels.get(col, col), log_scale=x_log)
+            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log)
         elif kind == "violin":
-            sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
+            sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxplot":
-            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
+            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "kde":
-            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col))
+            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxenplot":
-            sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col))
+            sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         else:
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set titles and labels
-        axs[i].set_title(f"Distribution of {custom_labels[col]} across {', '.join(categories)}", fontsize=20)
-        axs[i].set_xlabel(fr"$\log$({custom_labels[col]} + 1)" if x_log else col, fontsize=16)
+        axs[i].set_title(f"Distribution of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+        axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
         axs[i].set_ylabel("Count" if not y_log else r"$\log$(Count)", fontsize=16)
 
         # Apply y-axis log scale if specified
