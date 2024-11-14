@@ -449,3 +449,61 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
     plt.show()
 
     return stats
+
+
+def save_chunk_grouped_by_col(df, column, output_dir="data/video_metadata"):
+    """
+    Saves a chunk of data into separate files for each category in the specified column.
+    :param df (pd.DataFrame): DataFrame containing the data chunk.
+    :param column (str): Column to group the data by.
+    :param output_dir (str): Output directory to save the files.
+    """
+    # Check if the column exists
+    if column not in df.columns:
+        raise ValueError(f"The column '{column}' does not exist in the DataFrame.")
+
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Group by the specified column
+    grouped = df.groupby(column)
+
+    for group, df_group in grouped:
+        # Define the output file path
+        output_file = os.path.join(output_dir, f"{group}.jsonl.gz")
+        df_group.to_json(output_file, mode='a', compression='gzip', lines=True, orient='records')
+
+
+def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size=10_000, column_to_group="categories"):
+    """
+    Process a large JSONL file by reading it in chunks, grouping the data by a specified column, and saving each group to a separate Parquet file.
+    :param data_filename (str): Path to the data file.
+    :param chunk_size (int): The number of rows to read in each chunk.
+    :param column_to_group (str): The column to group the data by.
+    """
+    with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
+        for chunk in reader:
+            # drop the "'crawl_date' column
+            chunk = chunk.drop(columns=['crawl_date'])
+            save_chunk_grouped_by_col(chunk, column=column_to_group, output_dir=output_dir)
+
+    # Convert the JSONL files to Parquet format
+    for filename in os.listdir(output_dir):
+        if filename.endswith(".jsonl.gz"):
+            data_filename = os.path.join(output_dir, filename)
+            output_filename = data_filename.replace(".jsonl.gz", ".parquet")
+            convert_jsonl_to_parquet(data_filename, output_filename)
+
+
+def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000):
+    """
+    Convert a JSONL file to Parquet format.
+    :param data_filename (str): Path to the JSONL file.
+    :param output_filename (str): Path to the output Parquet file.
+    """
+    dfs = []
+    with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
+        for chunk in reader:
+            dfs.append(chunk)
+    df = pd.concat(dfs)
+    df.to_parquet(output_filename, compression='gzip')
