@@ -543,9 +543,12 @@ def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20")
     labels = data.index
     sizes = data.values
 
-    # Custom colors for the pie chart
-    colors = sns.color_palette(palette, len(labels))
+    # Custom colors for the pie chart: a category will have the same color across different plots
+    unique_categories = df[column].unique()
+    colors = sns.color_palette(palette, len(unique_categories))
     colors = [(r, g, b, 0.9) for r, g, b in colors]
+    color_map = {category: color for category, color in zip(unique_categories, colors)}
+    colors = [color_map[label] for label in labels]
 
     # Create the pie chart
     wedges, texts, autotexts = ax.pie(
