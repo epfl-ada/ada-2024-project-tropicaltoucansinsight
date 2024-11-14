@@ -1,29 +1,45 @@
-
 # Your project name
+
 This is a template repo for your project to help you organise and document your code better. 
 Please use this structure for your project and document the installation, usage and structure as below.
 
-## Quickstart
+
+# Quickstart
+
+Follow these steps to set up and run the project locally.
+
+### 1. Clone the Repository
+
+Clone the project repository and navigate into the project directory:
 
 ```bash
-# clone project
-git clone <project link>
-cd <project repo>
-
-# [OPTIONAL] create conda environment
-conda create -n <env_name> python=3.11 or ...
-conda activate <env_name>
-
-
-# install requirements
-pip install -r pip_requirements.txt
+git clone git@github.com:epfl-ada/ada-2024-project-tropicaltoucansinsight.git
+cd ada-2024-project-tropicaltoucansinsight
 ```
 
+### 2. Set Up the Conda Environment
 
+Install the environment depending on your operating system:
 
-### How to use the library
-Tell us how the code is arranged, any explanations goes here.
+- **For Windows**:
+  ```bash
+  conda env create -f windows_env.yml
+  ```
 
+- **For macOS**:
+  ```bash
+  conda env create -f mac_env.yml
+  ```
+
+### 3. Activate the Environment
+
+Once the environment is created, activate it:
+
+```bash
+conda activate tropicaltoucansinsight
+```
+
+You’re all set!
 
 
 ## Project Structure

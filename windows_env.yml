@@ -1,0 +1,14 @@
+name: tropicaltoucansinsight
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - miktex
+  - pandas
+  - requests
+  - numpy
+  - seaborn
+  - matplotlib
+  - jupyter
+  - pyarrow
+  - fastparquet
