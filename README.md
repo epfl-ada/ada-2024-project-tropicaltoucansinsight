@@ -23,12 +23,12 @@ Install the environment depending on your operating system:
 
 - **For Windows**:
   ```bash
-  conda env create -f windows_env.yml
+  conda env create -f environments/windows_env.yml
   ```
 
 - **For macOS**:
   ```bash
-  conda env create -f mac_env.yml
+  conda env create -f environments/mac_env.yml
   ```
 
 ### 3. Activate the Environment
