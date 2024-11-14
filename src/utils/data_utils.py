@@ -253,7 +253,8 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         "videos": "Videos",
         "delta_views": r"$\Delta$(views)",
         "delta_subs": r"$\Delta$(subs)",
-        "delta_videos": r"$\Delta$(videos)"
+        "delta_videos": r"$\Delta$(videos)",
+        "duration": "Duration"
     }
 
     # If there's only one column, axs is not a list, so we make it iterable
