@@ -454,9 +454,11 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
 def save_chunk_grouped_by_col(df, column, output_dir="data/video_metadata"):
     """
     Saves a chunk of data into separate files for each category in the specified column.
-    :param df (pd.DataFrame): DataFrame containing the data chunk.
-    :param column (str): Column to group the data by.
-    :param output_dir (str): Output directory to save the files.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data chunk.
+        column (str): Column to group the data by.
+        output_dir (str): Output directory to save the files.
     """
     # Check if the column exists
     if column not in df.columns:
@@ -477,9 +479,11 @@ def save_chunk_grouped_by_col(df, column, output_dir="data/video_metadata"):
 def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size=10_000, column_to_group="categories"):
     """
     Process a large JSONL file by reading it in chunks, grouping the data by a specified column, and saving each group to a separate Parquet file.
-    :param data_filename (str): Path to the data file.
-    :param chunk_size (int): The number of rows to read in each chunk.
-    :param column_to_group (str): The column to group the data by.
+
+    Args:
+        data_filename (str): Path to the data file.
+        chunk_size (int): The number of rows to read in each chunk.
+        column_to_group (str): The column to group the data by.
     """
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
         for chunk in reader:
@@ -498,8 +502,10 @@ def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size
 def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000):
     """
     Convert a JSONL file to Parquet format.
-    :param data_filename (str): Path to the JSONL file.
-    :param output_filename (str): Path to the output Parquet file.
+
+    Args:
+        data_filename (str): Path to the JSONL file.
+        output_filename (str): Path to the output Parquet file.
     """
     dfs = []
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
@@ -507,3 +513,66 @@ def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000)
             dfs.append(chunk)
     df = pd.concat(dfs)
     df.to_parquet(output_filename, compression='gzip')
+
+
+def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20"):
+    """
+    Plot a pie chart for the specified column in the DataFrame.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the data.
+        column (str): The column to plot.
+        title (str): The title of the pie chart.
+        values (str): The column containing the values to sum for each category.
+        threshold (int): The threshold percentage for displaying the labels outside the pie chart
+    """
+    custom_label = {
+        "category_cc": "Category",
+        "subscribers_cc": "Subscribers",
+        "views_cc": "Views",
+        "videos_cc": "Videos",
+    }
+
+    fig, ax = plt.subplots(figsize=(15, 10))
+    # Group the data by the specified column and sum the values if specified, sort by descending order
+    if values:
+        data = df.groupby(column)[values].sum().sort_values(ascending=False)
+    else:
+        data = df[column].value_counts().sort_values(ascending=False)
+
+    labels = data.index
+    sizes = data.values
+
+    # Custom colors for the pie chart
+    colors = sns.color_palette(palette, len(labels))
+    colors = [(r, g, b, 0.9) for r, g, b in colors]
+
+    # Create the pie chart
+    wedges, texts, autotexts = ax.pie(
+        sizes,
+        autopct=lambda p: f'{p:.1f}%' if p >= threshold else '',
+        startangle=140,
+        colors=colors,
+        textprops={'fontsize': 12},
+        wedgeprops={'edgecolor': 'white', 'linewidth': 1},
+        pctdistance=0.85
+    )
+
+    # Adjust percentages and add them outside or in legend for small segments
+    legend_labels = []
+    total = sum(sizes)
+    for i, (size, label, autotext) in enumerate(zip(sizes, labels, autotexts)):
+        percentage = (size / total) * 100
+        # For small segments, add the percentage outside the pie chart
+        if percentage < threshold:
+            # Add to legend with percentage
+            legend_labels.append(f"{label} ({percentage:.1f}%)")
+        else:
+            autotext.set_color('black')
+            autotext.set_weight('bold')
+            autotext.set_fontsize(14)
+            legend_labels.append(label)
+
+    ax.set_title(title, fontsize=20, weight='bold', pad=16)
+    ax.legend(wedges, legend_labels, title=custom_label[column], loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+    plt.show()
