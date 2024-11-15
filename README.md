@@ -5,18 +5,18 @@
 Some say the greatest showdown of the 21st century was Floyd Mayweather versus Logan Paul, with massive stakes in marketing, money, and public hype. We couldn’t disagree more: the real battle is Entertainment vs. Music on YouTube! Leveraging the YouNiverse dataset, a massive collection of metadata covering 136k channels, 72.9M videos, and 2.8 years of time series data on views and subscribers, we dive into YouTube’s top two categories, analyzing their reach through views, subscriber counts, and strategic collaborations. Do entertainment creators ramp up content in December to maximize ad revenue? Do music artists dominate the long game thanks to loyal fan bases? From seasonal trends to community dynamics, we’ll explore how these giants shape and reshape their audiences. Get ready for a data showdown where each side fights for the throne of influence, popularity, and engagement. Through time series analysis, hypothetical monetization, and network insights, this is YouTube’s ultimate battle—where only one category can claim the crown in the world’s biggest digital arena!
 
 ## Research Questions and Methods
-With this project, we would like to answer the following questions (note: rephrased in a way to have a clear winner for each research question in the end). After each question, we detail the different methods we plan to use:
+With this project, we aim to answer the following research questions (rephrased to identify a clear winner for each question). After each question, we detail the different methods we plan to use:
 1. **Which category captures greater monetization potential, and does either Entertainment or Music benefit more from ad-friendly periods like December, while suffering less during slower periods like summer?**
-   - After gathering some [info online](https://support.google.com/youtube?sjid=13108256786547781650-EU#topic=9257498), we quantify monetization potential ($\text{MP}$) by creating a metric defined as
+   - After gathering information from [Google Support](https://support.google.com/youtube?sjid=13108256786547781650-EU#topic=9257498), we quantify monetization potential ($\text{MP}$) by creating a metric defined as
 
      $$\text{MP}(\text{video})= N_{\text{views}}\cdot\left[ 1+\alpha\cdot \text{round}\left(  \frac{t_{\text{video}} \text{ [min]}}{8\text{ [min]}}  \right)  \right],$$ 
 
-     where $N_{\text{views}}$ represents the number of views of the video,  $t_{\text{video}}$ is the video duration, $\alpha$ is a scaling factor (set to 0.5 for now), and $\text{round}(\cdot)$ rounds its argument to the nearest integer. The larger the value of $\alpha$, the more influence video duration has on the monetization potential. Comparisons are made over the full dataset, and across key periods, hypothesizing that Entertainment might see higher traffic peaks during holiday seasons, while Music might retain steady viewership through continuous fan support.
+     where $N_{\text{views}}$ represents the number of views of the video,  $t_{\text{video}}$ is the video duration, $\alpha$ is a scaling factor (set to 0.5 for now), and $\text{round}(\cdot)$ rounds its argument to the nearest integer. The larger the value of $\alpha$, the more influence video duration has on monetization potential. We will compare this metric across the full dataset and during key periods, hypothesizing that Entertainment may experience higher traffic peaks during holiday seasons, while Music might maintain steady viewership through consistent fan support.
 2. **Which category, Entertainment or Music, offers a broader diversity of content types and formats, and does this diversity lead to a measurable advantage in audience engagement and retention?**
-   - To assess content diversity, we categorize video formats and themes within each category. To do so, we will try to implement a machine learning approach by keyword clustering, with the use of Spacy or RoBERTa, for example. If possible, we will also try to take into account video duration as a characteristic for clustering.  We then evaluate how diversity correlates with engagement, and whether it plays a role in maintaining the audience’s interest, testing if one category benefits from a richer spectrum of content types.
-   - Furthermore, we will use an LLM to analyze the positivity/negativity of the content in both categories. This can be done overall and for the different sub-categorization established before. It will be interesting to relate sentiment to engagement. (TODO: rephrase)
+   - We will categorize video formats and themes within each category using a machine learning approach, such as keyword clustering with tools like SpaCy or RoBERTa. If feasible, we will also incorporate video duration as a feature for clustering.  We then evaluate how diversity correlates with engagement metrics to determine if one category benefits from a richer spectrum of content types.
+   - Furthermore, we will use an LLM to analyze the sentiment (positivity/negativity) of the content in both categories. This can be done overall and for the different sub-categorization established before. It will be interesting to relate sentiment to engagement. (**TODO: rephrase**)
 3. **Do collaboration patterns in Music or Entertainment channels yield greater viewership, and which category leverages collaborations more effectively to expand reach?**
-   - Using text mining on video titles, descriptions and tags, we identify collaborations (keywords like ‘feat’, ‘ft’, ‘with’, ‘w/’) and measure their impact on viewership and reach. We compare the dominance and success of collaborations within each category to assess which leverages partnerships in the most effective way.
+   - Using text mining on video titles, descriptions and tags, we can identify collaborations (keywords like ‘feat’, ‘ft’, ‘with’, ‘w/’) and measure their impact on viewership and reach. We can then compare the dominance and success of collaborations within each category to assess which leverages partnerships in the most effective way.
 4. **Which category, Music or Entertainment, maintains more consistent popularity over both short-term and long-term timeframes, and which one performs better in sustaining viewer interest?**
    - We measure short-term versus long-term popularity by setting different time frames (e.g. 24h, 1 week, 1 month, 6 month, 1 year) on the time-series data. By analyzing view trends over time, we identify whether Music or Entertainment videos sustain interest longer, and we classify outliers, like channels with high views but low subscribers, to determine the loyalty differences.
 5. **Which category, Entertainment or Music, demonstrates more effective seasonal release patterns that lead to higher viewership peaks?**
@@ -31,11 +31,33 @@ With this project, we would like to answer the following questions (note: rephra
 - Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date, comments (TODO: à voir si on garde?)) to facilitate processing given the dataset’s large disk space requirements.
 - Time-series data are organized in the same manner to capture trends across the  dataset’s 2.8-year span, useful to capture seasonal patterns and viewership fluctuations. In addition, basic statistics about both categories will be given, such as time-series of total view and subscriber counts.
 
+## Proposed timeline and Organization within the Team
+```mermaid
+gantt
+    title Project Timeline
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d, %Y
 
-## Proposed timeline
-## Organization
-## Questions for TAs (optional): Add here any questions you have for us related to the proposed project.
+    section Data Handling
+    Data handling, preprocessing, exploratory data analysis :a1, 2024-11-01, 20d
 
+    section Website Setup
+    Set up the website :a2, 2024-11-16, 5d
+
+    section Implementation
+    Tasks implementation and preliminary analysis :a3, 2024-11-21, 15d
+
+    section Analysis
+    Compile final analysis :a4, 2024-12-04, 7d
+
+    section Redaction
+    Data story redaction :a5, 2024-12-06, 14d
+
+    section Submission
+    Project final submission :a6, 2024-12-18, 2d
+```
+
+## Questions for TAs
 
 --- 
 
