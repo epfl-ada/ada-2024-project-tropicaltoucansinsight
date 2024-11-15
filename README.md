@@ -122,15 +122,17 @@ The directory structure of new project looks like this:
 ```
 ├── data                        <- Project data files
 │
+├── environments                <- Environment files
+│
+├── experiments                 <- Notebooks of tests
+│
 ├── src                         <- Source code
 │   ├── data                            <- Data directory
 │   ├── models                          <- Model directory
 │   ├── utils                           <- Utility directory
 │   ├── scripts                         <- Shell scripts
 │
-├── tests                       <- Tests of any kind
-│
-├── results.ipynb               <- a well-structured notebook showing the results
+├── results.ipynb               <- Notebook of results
 │
 ├── .gitignore                  <- List of files ignored by git
 ├── pip_requirements.txt        <- File for installing python dependencies
