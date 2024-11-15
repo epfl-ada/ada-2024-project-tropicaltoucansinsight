@@ -28,7 +28,7 @@ With this project, we aim to answer the following research questions (rephrased 
 
 ### Remarks about Data Preparation and Cleaning
 - We begin by filtering the YouNiverse dataset to include only channels and videos within Entertainment and Music categories.
-- Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date, comments (TODO: à voir si on garde?)) to facilitate processing given the dataset’s large disk space requirements.
+- Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date) to facilitate processing given the dataset’s large disk space requirements.
 - Time-series data are organized in the same manner to capture trends across the  dataset’s 2.8-year span, useful to capture seasonal patterns and viewership fluctuations. In addition, basic statistics about both categories will be given, such as time-series of total view and subscriber counts.
 
 ## Proposed timeline and Organization within the Team
