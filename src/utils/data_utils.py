@@ -275,15 +275,21 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
                 kde = False
             if marker_only:
                 markers = ['o', 's', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_']
+                if x_log:
+                    bins = np.geomspace(df[col].min(), df[col].max(), 100)
+                else:
+                    bins = 100
+
                 for cat, marker in zip(categories, markers):
                     data = df[df[hue] == cat][col]
-                    counts, bin_edges = np.histogram(np.log(data+1) if x_log else data, bins=100)
+                    counts, bin_edges = np.histogram(data, bins=bins)
                     bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
                     axs[i].plot(bin_centers, counts, marker=marker, label=cat, alpha=0.9,
                                 markerfacecolor='none', markeredgewidth=2, linestyle='None', markersize=7)
-                    axs[i].set_xlabel(rf"$\log$(custom_labels[col])+1" if x_log else custom_labels[col], fontsize=16)
                     axs[i].legend(title=hue, title_fontsize=20)
                     axs[i].grid(True, alpha=0.5)
+                if x_log:
+                    axs[i].set_xscale('log')
             else:
                 sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log)
         elif kind == "violin":
@@ -299,8 +305,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
 
         # Set titles and labels
         axs[i].set_title(f"Distribution of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
-        if not marker_only:
-            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
+        axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
         axs[i].set_ylabel("Count", fontsize=16)
 
         # Apply y-axis log scale if specified
