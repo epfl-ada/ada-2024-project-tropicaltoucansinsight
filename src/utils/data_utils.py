@@ -201,7 +201,7 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set plot titles and labels
-        axs[i].set_title(f"Distribution of {custom_labels[col]} \nfor the {category} category", fontsize=25)
+        axs[i].set_title(f"Distribution of Number of Entries per \n {custom_labels[col]} for the {category} category", fontsize=25)
 
         if x_log:
             axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=20)
@@ -304,7 +304,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set titles and labels
-        axs[i].set_title(f"Distribution of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+        axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
         axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
         axs[i].set_ylabel("Count", fontsize=16)
 
@@ -441,12 +441,16 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
         "join_date": "Join Date"
     }
 
+    str_type = ''
+    if type == 'channel': str_type = 'Channels'
+    elif type == 'video_metadata': str_type = 'Videos'
+
     for col in numerical_columns:
         plt.figure(figsize=(8, 6))
         if (col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or
                 col == 'view_count' or col == 'dislike_count' or col == 'duration'):
             sns.histplot(df[col], bins=100, log_scale=True)
-            plt.title(f"Histogram of {custom_labels[col]} \nin the {category_name} Category", fontsize=25)
+            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} Category", fontsize=25)
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
 
@@ -457,7 +461,7 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
             sns.histplot(df[col], bins=100)
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
-            plt.title(f"Histogram of {custom_labels[col]} \nin the {category_name} category", fontsize=25)
+            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} category", fontsize=25)
 
 
 
