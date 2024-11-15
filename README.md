@@ -1,8 +1,42 @@
-# Your project name
+# The YouTube Heavyweights: Entertainment vs. Music Face Off
 
-This is a template repo for your project to help you organise and document your code better. 
-Please use this structure for your project and document the installation, usage and structure as below.
+## Abstract
 
+Some say the greatest showdown of the 21st century was Floyd Mayweather versus Logan Paul, with massive stakes in marketing, money, and public hype. We couldn’t disagree more: the real battle is Entertainment vs. Music on YouTube! Leveraging the YouNiverse dataset, a massive collection of metadata covering 136k channels, 72.9M videos, and 2.8 years of time series data on views and subscribers, we dive into YouTube’s top two categories, analyzing their reach through views, subscriber counts, and strategic collaborations. Do entertainment creators ramp up content in December to maximize ad revenue? Do music artists dominate the long game thanks to loyal fan bases? From seasonal trends to community dynamics, we’ll explore how these giants shape and reshape their audiences. Get ready for a data showdown where each side fights for the throne of influence, popularity, and engagement. Through time series analysis, hypothetical monetization, and network insights, this is YouTube’s ultimate battle—where only one category can claim the crown in the world’s biggest digital arena!
+
+## Research Questions and Methods
+With this project, we would like to answer the following questions (note: rephrased in a way to have a clear winner for each research question in the end). After each question, we detail the different methods we plan to use:
+1. **Which category captures greater monetization potential, and does either Entertainment or Music benefit more from ad-friendly periods like December, while suffering less during slower periods like summer?**
+  - After gathering some [info online](https://support.google.com/youtube?sjid=13108256786547781650-EU#topic=9257498), we quantify monetization potential ($\text{MP}$) by creating a metric defined as $$\text{MP}(\text{video})= N_{\text{views}}\cdot\left[ 1+\alpha\cdot \text{round}\left(  \frac{t_{\text{video}} \text{ [min]}}{8\text{ [min]}}  \right)  \right],$$where $N_{\text{views}}$ represents the number of views of the video,  $t_{\text{video}}$ is the video duration, $\alpha$ is a scaling factor (set to $0.5$ for now), and $\text{round}(\cdot)$ rounds its argument to the nearest integer. The larger the value of $\alpha$, the more influence video duration has on the monetization potential. Comparisons are made over the full dataset, and across key periods, hypothesizing that Entertainment might see higher traffic peaks during holiday seasons, while Music might retain steady viewership through continuous fan support.
+2. **Which category, Entertainment or Music, offers a broader diversity of content types and formats, and does this diversity lead to a measurable advantage in audience engagement and retention?**
+  - To assess content diversity, we categorize video formats and themes within each category. To do so, we will try to implement a machine learning approach by keyword clustering, with the use of Spacy or RoBERTa, for example. If possible, we will also try to take into account video duration as a characteristic for clustering.  We then evaluate how diversity correlates with engagement, and whether it plays a role in maintaining the audience’s interest, testing if one category benefits from a richer spectrum of content types.
+  - Furthermore, we will use an LLM to analyze the positivity/negativity of the content in both categories. This can be done overall and for the different sub-categorization established before. It will be interesting to relate sentiment to engagement. (TODO: rephrase)
+1. **Do collaboration patterns in Music or Entertainment channels yield greater viewership, and which category leverages collaborations more effectively to expand reach?**
+  - Using text mining on video titles, descriptions and tags, we identify collaborations (keywords like ‘feat’, ‘ft’, ‘with’, ‘w/’) and measure their impact on viewership and reach. We compare the dominance and success of collaborations within each category to assess which leverages partnerships in the most effective way.
+2. **Which category, Music or Entertainment, maintains more consistent popularity over both short-term and long-term timeframes, and which one performs better in sustaining viewer interest?**
+  - We measure short-term versus long-term popularity by setting different time frames (e.g. 24h, 1 week, 1 month, 6 month, 1 year) on the time-series data. By analyzing view trends over time, we identify whether Music or Entertainment videos sustain interest longer, and we classify outliers, like channels with high views but low subscribers, to determine the loyalty differences.
+3. **Which category, Entertainment or Music, demonstrates more effective seasonal release patterns that lead to higher viewership peaks?**
+  - Using the time-series data, we analyze dynamics through time to determine if one category, Entertainment or Music, aligns its content releases with periods of high potential viewership like December. Here, it will be interesting to provide examples of some of the bigger channels in each category to give a concrete visualization of these trends.
+
+5. **In which category does major content release (e.g., albums for Music or viral projects for Entertainment) lead to stronger subscriber growth and higher engagement?**
+  - Focussing on significant releases, we track subscriber jumps around events like album drops for Music or viral videos for Entertainment. Time-series analysis of weekly subscriber data helps measure which category sees stronger engagement and audience growth in response to these major releases. (préciser s’il s’agit d’une analyse globale ou sur certains artistes en particulier? par exemple avec un sampling sur des chaînes?)  
+    
+
+7. **Optional: What are the differences between communities in between Music and Entertainment videos and do they overlap? What are their different characteristics, such as size and duration in time? What can we say with the answers to the other questions above?**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                 If our computers allow, with the use of Pyspark we will try to find out which communities populate the Music and Entertainment categories (also if there is some crossover) and try to figure out how they evolve in time. With all the information from the previous points (such as engagement and content diversity), we can understand how communities in both categories behave. (TODO: reformulate and find more specific ideas)
+
+### Remarks about Data Preparation and Cleaning
+- We begin by filtering the YouNiverse dataset to include only channels and videos within Entertainment and Music categories.
+- Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date, comments (TODO: à voir si on garde?)) to facilitate processing given the dataset’s large disk space requirements.
+- Time-series data are organized in the same manner to capture trends across the  dataset’s 2.8-year span, useful to capture seasonal patterns and viewership fluctuations. In addition, basic statistics about both categories will be given, such as time-series of total view and subscriber counts.
+
+
+## Proposed timeline
+## Organization
+## Questions for TAs (optional): Add here any questions you have for us related to the proposed project.
+
+
+--- 
 
 # Quickstart
 
@@ -63,58 +97,3 @@ The directory structure of new project looks like this:
 ├── pip_requirements.txt        <- File for installing python dependencies
 └── README.md
 ```
-
----
-
-File containing the detailed project proposal (up to 1000 words)
-- Title
-- Abstract: A 150 word description of the project idea and goals. What’s the motivation behind your project? What story would you like to tell, and why?
-- Research Questions: A list of research questions you would like to address during the project.
-- Proposed additional datasets (if any): List the additional dataset(s) you want to use (if any), and some ideas on how you expect to get, manage, process, and enrich it/them. Show us that you’ve read the docs and some examples, and that you have a clear idea on what to expect. Discuss data size and format if relevant. It is your responsibility to check that what you propose is feasible.
-- Methods
-- Proposed timeline
-- Organization within the team: A list of internal milestones up until project Milestone P3.
-- Questions for TAs (optional): Add here any questions you have for us related to the proposed project.
-
-# Plan de projet (test)
-
-Voici le diagramme de Gantt pour le projet :
-
-```mermaid
-gantt
-    title Diagramme de Gantt du Projet
-
-    section Etape 1 : Recherche de littérature
-    Lecture et sélection des articles        :done,     des1, 2024-11-01, 10d
-    Rédaction de la section état de l'art    :active,   des2, after des1, 10d
-
-    section Etape 2 : Formulation des hypothèses
-    Identification des hypothèses            :         hyp1, after des2, 5d
-    Rédaction de la section hypothèses       :         hyp2, after hyp1, 7d
-
-    section Etape 3 : Analyse des données
-    Préparation et nettoyage des données     :         data1, 2024-11-20, 10d
-    Analyse exploratoire                     :         data2, after data1, 10d
-    Modélisation et test des hypothèses      :         data3, after data2, 10d
-
-    section Etape 4 : Rédaction et révisions
-    Rédaction du mémoire                     :         redac1, after data3, 20d
-    Révision et corrections                  :         redac2, after redac1, 10d
-
-    section Etape 5 : Présentation finale
-    Préparation de la présentation           :         pres1, after redac2, 5d
-    Soutenance                               :         pres2, after pres1, 1d
-```
-
-
-# Flowchart test
-```mermaid
-flowchart TD
-    A[Début] --> B[Étape 1 : Recherche]
-    B --> C{Est-ce validé ?}
-    C -- Oui --> D[Étape 2 : Analyse]
-    C -- Non --> E[Réviser]
-    E --> B
-    D --> F[Fin]
-```
-
