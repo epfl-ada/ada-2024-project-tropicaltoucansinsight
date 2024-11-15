@@ -153,12 +153,12 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
     plt.show()
 
 
-def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist", print_summary=False):
+def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind="hist", print_summary=False):
     """
     Plots the distribution of the columns in the DataFrame for a specific category.
 
     Args:
-        df (pd.DataFrame): DataFrame containing the data
+        df_data (pd.DataFrame): DataFrame containing the data
         columns (list of str): List of columns to plot
         category (str): Name of the category
         x_logs (list of bool): List of boolean values indicating if the data will be log-transformed on the x-axis
@@ -166,6 +166,7 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         kind (str): Type of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         print_summary (bool): if True, prints the summary statistics of the columns
     """
+    df = df_data.copy()
 
     custom_labels = {
         "views": "Views",
@@ -182,27 +183,27 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         axs = [axs]
 
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
-        # Apply log transformation if specified
-        data = np.log(df[col] + 1) if x_log else df[col]
+        if x_log:
+            df[col] = df[col] + 1  # Avoid log(0) by adding 1
 
         # Plot based on the selected kind
         if kind == "violin":
-            sns.violinplot(x=data, fill=False, ax=axs[i], linewidth=1, label=custom_labels.get(col, col))
+            sns.violinplot(x=df[col], fill=False, ax=axs[i], linewidth=1, label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "hist":
-            sns.histplot(data, bins=100, ax=axs[i], label=custom_labels.get(col, col))
+            sns.histplot(df[col], bins=100, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxplot":
-            sns.boxplot(x=data, ax=axs[i], label=custom_labels.get(col, col))
+            sns.boxplot(x=df[col], ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "kde":
-            sns.kdeplot(data, ax=axs[i], label=custom_labels.get(col, col))
+            sns.kdeplot(df[col], ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxenplot":
-            sns.boxenplot(x=data, ax=axs[i], label=custom_labels.get(col, col))
+            sns.boxenplot(x=df[col], ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+        else:
+            raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set plot titles and labels
         axs[i].set_title(f"Distribution of {custom_labels[col]} \nfor the {category} category", fontsize=25)
 
         if x_log:
-            axs[i].set_xlabel(fr"$\log$({custom_labels[col]} + 1)", fontsize=20)
-        else:
             axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=20)
 
         axs[i].set_ylabel("Count", fontsize=20)
@@ -211,7 +212,6 @@ def plot_category_distribution(df, columns, category, x_logs, y_logs, kind="hist
         # Apply log scale to the y-axis if specified
         if y_log:
             axs[i].set_yscale('log')
-            axs[i].set_ylabel(r"$\log$(Count)", fontsize=20)
 
     plt.tight_layout()
     plt.show()
@@ -226,7 +226,7 @@ def upper_case_first_letter(s):
     return s[0].upper() + s[1:]
 
 
-def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category'):
+def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False):
     """
     Plot the distribution of the columns for the given categories.
 
@@ -238,7 +238,10 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         y_logs (list of bool): Whether to log-scale the y-axis for each plot
         kind (str): The kind of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         hue (str): The name of the column with the categories
+        marker_only (bool): If True, only plot the markers without the histogram (useful when comparing many categories)
     """
+    # TODO: set the same color palette as the pie chart
+
     # Filter for the selected categories
     df = df_data[df_data[hue].isin(categories)].copy()
     df = df.rename(columns={hue: upper_case_first_letter(hue)})
@@ -270,7 +273,15 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             kde = True
             if y_log:
                 kde = False
-            sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log)
+            if marker_only:
+                # Calculate histogram values without plotting
+                for cat in categories:
+                    data = df[df[hue] == cat][col]
+                    counts, bin_edges = np.histogram(data, bins=100)
+                    bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+                    axs[i].plot(bin_centers, counts, 'o', label=cat, alpha=0.7)
+            else:
+                sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log)
         elif kind == "violin":
             sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxplot":
@@ -285,7 +296,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         # Set titles and labels
         axs[i].set_title(f"Distribution of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
         axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
-        axs[i].set_ylabel("Count" if not y_log else r"$\log$(Count)", fontsize=16)
+        axs[i].set_ylabel("Count", fontsize=16)
 
         # Apply y-axis log scale if specified
         if y_log:
