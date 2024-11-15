@@ -57,6 +57,22 @@ gantt
     Project final submission :a6, 2024-12-18, 2d
 ```
 
+| **Task**| **Research Question**| **Description**| **Assigned Member** |
+|:--:|:--:|--|:--:|
+| **Define Monetization Metric (MP)**| 1 | Develop and calculate the monetization potential metric | Timothée |
+| **Quantify Monetization During Key Periods**| 1 | Analyze MP across the entire dataset and for specific periods like December and summer, testing the holiday impact on Entertainment and Music categories| Timothée |
+| **Categorize Video Types and Formats**| 2 | Use keyword clustering to categorize formats within each category using tools like SpaCy or RoBERTa | Jérémy |
+| **Evaluate Engagement and Diversity Correlation**| 2 | Assess how diversity in content types affects engagement metrics for both categories | Jérémy |
+| **Sentiment Analysis for Content Types**| 2| Analyze the sentiment of videos across themes, measuring positivity/negativity and its impact on engagement (define engagement) | Sylvain |
+| **Identify and Analyze Collaboration Patterns**| 3 | Extract keywords in titles/descriptions to identify collaborations | Sylvain |
+| **Short-term vs Long-term Popularity Trends** | 4 | Analyze time-series data to assess short-term vs. long-term interest. Define a loyalty metric and examine it | Max |
+| **Seasonal Viewership Pattern Analysis** | 5 | Examine time-series data for seasonal trends in content releases, identifying peaks in periods like December for each category | Max |
+| **Case Study of Major Channels** | 5 | Select major channels in each category to provide examples that illustrate seasonal trends and highlight key patterns | Everyone |
+| **Track Subscriber Growth for Major Releases** | 6 | Measure subscriber increases around significant releases | Everyone |
+| **Community Analysis Using Pyspark (Optional)**| 7 (Optional) | Use Pyspark to explore community structures | Everyone |
+
+
+
 ## Questions for TAs
 
 --- 
