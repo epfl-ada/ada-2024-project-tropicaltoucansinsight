@@ -22,13 +22,13 @@ With this project, we aim to answer the following research questions (rephrased 
 5. **Which category, Entertainment or Music, demonstrates more effective seasonal release patterns that lead to higher viewership peaks?**
    - Using the time-series data, we analyze dynamics through time to determine if one category, Entertainment or Music, aligns its content releases with periods of high potential viewership like December. Here, it will be interesting to provide examples of some of the bigger channels in each category to give a concrete visualization of these trends.
 6. **In which category does major content release (e.g., albums for Music or viral projects for Entertainment) lead to stronger subscriber growth and higher engagement?**
-   - Focussing on significant releases, we track subscriber jumps around events like album drops for Music or viral videos for Entertainment. Time-series analysis of weekly subscriber data helps measure which category sees stronger engagement and audience growth in response to these major releases. (préciser s’il s’agit d’une analyse globale ou sur certains artistes en particulier? par exemple avec un sampling sur des chaînes?)
+   - Focussing on significant releases, we track subscriber jumps around events like album drops for Music or viral videos for Entertainment. Time-series analysis of weekly subscriber data helps measure which category sees stronger engagement and audience growth in response to these major releases. 
 7. **Optional: What are the differences between communities in between Music and Entertainment videos and do they overlap? What are their different characteristics, such as size and duration in time? What can we say with the answers to the other questions above?**
-    - If our computers allow, with the use of Pyspark we will try to find out which communities populate the Music and Entertainment categories (also if there is some crossover) and try to figure out how they evolve in time. With all the information from the previous points (such as engagement and content diversity), we can understand how communities in both categories behave. (TODO: reformulate and find more specific ideas)
+    - If our computers allow, with the use of Pyspark we will try to find out which communities populate the Music and Entertainment categories (also if there is some crossover) and try to figure out how they evolve in time. With all the information from the previous points (such as engagement and content diversity), we can understand how communities in both categories behave. 
 
 ### Remarks about Data Preparation and Cleaning
 - We begin by filtering the YouNiverse dataset to include only channels and videos within Entertainment and Music categories.
-- Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date, comments (TODO: à voir si on garde?)) to facilitate processing given the dataset’s large disk space requirements.
+- Essential metadata such as view counts, publications dates, and content/collaboration indicators (e.g. title, tags and descriptions) among others are extracted. We drop irrelevant data (for instance crawl date) to facilitate processing given the dataset’s large disk space requirements.
 - Time-series data are organized in the same manner to capture trends across the  dataset’s 2.8-year span, useful to capture seasonal patterns and viewership fluctuations. In addition, basic statistics about both categories will be given, such as time-series of total view and subscriber counts.
 
 ## Proposed timeline and Organization within the Team
@@ -56,6 +56,22 @@ gantt
     section Submission
     Project final submission :a6, 2024-12-18, 2d
 ```
+
+| **Task**| **Research Question**| **Description**| **Assigned Member** |
+|:--:|:--:|--|:--:|
+| **Define Monetization Metric (MP)**| 1 | Develop and calculate the monetization potential metric | Timothée |
+| **Quantify Monetization During Key Periods**| 1 | Analyze MP across the entire dataset and for specific periods like December and summer, testing the holiday impact on Entertainment and Music categories| Timothée |
+| **Categorize Video Types and Formats**| 2 | Use keyword clustering to categorize formats within each category using tools like SpaCy or RoBERTa | Jérémy |
+| **Evaluate Engagement and Diversity Correlation**| 2 | Assess how diversity in content types affects engagement metrics for both categories | Jérémy |
+| **Sentiment Analysis for Content Types**| 2| Analyze the sentiment of videos across themes, measuring positivity/negativity and its impact on engagement (define engagement) | Sylvain |
+| **Identify and Analyze Collaboration Patterns**| 3 | Extract keywords in titles/descriptions to identify collaborations | Sylvain |
+| **Short-term vs Long-term Popularity Trends** | 4 | Analyze time-series data to assess short-term vs. long-term interest. Define a loyalty metric and examine it | Max |
+| **Seasonal Viewership Pattern Analysis** | 5 | Examine time-series data for seasonal trends in content releases, identifying peaks in periods like December for each category | Max |
+| **Case Study of Major Channels** | 5 | Select major channels in each category to provide examples that illustrate seasonal trends and highlight key patterns | Everyone |
+| **Track Subscriber Growth for Major Releases** | 6 | Measure subscriber increases around significant releases | Everyone |
+| **Community Analysis Using Pyspark (Optional)**| 7 (Optional) | Use Pyspark to explore community structures | Everyone |
+
+
 
 ## Questions for TAs
 
