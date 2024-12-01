@@ -168,4 +168,4 @@ elif selected_section == "Meet the Team":
 
 # Footer with link to "Meet the Team"
 st.markdown("---")
-st.markdown("Made with ❤️ by [**Team Tropical Toucans Insight**](?section=Meet%20the%20Team). Conducted during Fall '24 at EPFL, Switzerland.")
+st.markdown("Made with ❤️ by **Team Tropical Toucans Insight**. CS401 Applied Data Analysis course project conducted in Fall '24 at EPFL, Switzerland.")
