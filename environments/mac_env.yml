@@ -13,3 +13,6 @@ dependencies:
   - pyarrow
   - fastparquet
   - pyspark
+  - pip  
+  - pip:
+      - streamlit
