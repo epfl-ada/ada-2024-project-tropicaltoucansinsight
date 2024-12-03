@@ -71,11 +71,7 @@ gantt
 | **Track Subscriber Growth for Major Releases** | 6 | Measure subscriber increases around significant releases | Everyone |
 | **Community Analysis Using Pyspark (Optional)**| 7 (Optional) | Use Pyspark to explore community structures | Everyone |
 
-
-
-## Questions for TAs
-
---- 
+---
 
 # Quickstart
 
@@ -135,6 +131,5 @@ The directory structure of new project looks like this:
 ├── results.ipynb               <- Notebook of results
 │
 ├── .gitignore                  <- List of files ignored by git
-├── pip_requirements.txt        <- File for installing python dependencies
 └── README.md
 ```
