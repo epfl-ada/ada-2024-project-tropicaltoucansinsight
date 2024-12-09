@@ -173,7 +173,10 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
         "subs": "Subscribers",
         "delta_views": r"$\Delta$(views)",
         "delta_subs": r"$\Delta$(subs)",
-        "delta_videos": r"$\Delta$(videos)"
+        "delta_videos": r"$\Delta$(videos)",
+        "view_count":"Number of Views",
+        "like_count":"Number of Likes",
+        "dislike_count":"Number of Dislikes",
     }
 
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
@@ -226,7 +229,7 @@ def upper_case_first_letter(s):
     return s[0].upper() + s[1:]
 
 
-def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False):
+def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False, density=False):
     """
     Plot the distribution of the columns for the given categories.
 
@@ -239,6 +242,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         kind (str): The kind of plot to use in {"violin", "hist", "boxplot", "kde", "boxenplot"}
         hue (str): The name of the column with the categories
         marker_only (bool): If True, only plot the markers without the histogram (useful when comparing many categories)
+        density (bool): If True, plot the density instead of the count
     """
     # TODO: set the same color palette as the pie chart
 
@@ -259,7 +263,10 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         "delta_videos": r"$\Delta$(videos)",
         "duration": "Duration",
         "engagement_score": "Engagement",
-        "estimated_revenue": "Revenue"
+        "estimated_revenue": "Revenue",
+        "view_count":"Number of Views",
+        "like_count":"Number of Likes",
+        "dislike_count":"Number of Dislikes",
     }
 
     # If there's only one column, axs is not a list, so we make it iterable
@@ -278,13 +285,13 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             if marker_only:
                 markers = ['o', 's', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_']
                 if x_log:
-                    bins = np.geomspace(df[col].min(), df[col].max(), 100)
+                    bins = np.geomspace(df[col].min(), df[col].max(), 80)
                 else:
-                    bins = 100
+                    bins = 80
 
                 for cat, marker in zip(categories, markers):
                     data = df[df[hue] == cat][col]
-                    counts, bin_edges = np.histogram(data, bins=bins)
+                    counts, bin_edges = np.histogram(data, bins=bins, density=density)
                     bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
                     axs[i].plot(bin_centers, counts, marker=marker, label=cat, alpha=0.9,
                                 markerfacecolor='none', markeredgewidth=2, linestyle='None', markersize=7)
@@ -293,7 +300,9 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
                 if x_log:
                     axs[i].set_xscale('log')
             else:
-                sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log)
+                stat = 'density' if density else 'count'
+                sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log, stat=stat, common_norm=False)
+
         elif kind == "violin":
             sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
         elif kind == "boxplot":
@@ -306,9 +315,14 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
 
         # Set titles and labels
-        axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+        if density:
+            axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel("Density", fontsize=16)
+        else:
+            axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel("Count", fontsize=16)
+
         axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
-        axs[i].set_ylabel("Count", fontsize=16)
 
         # Apply y-axis log scale if specified
         if y_log:
@@ -606,3 +620,16 @@ def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20")
     ax.set_title(title, fontsize=20, weight='bold', pad=16)
     ax.legend(wedges, legend_labels, title=custom_label[column], loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
     plt.show()
+
+
+def geometric_mean(data):
+    """
+    Compute the geometric mean of a list of values.
+
+    Args:
+        data (df.Series): List of values.
+
+    Returns:
+        float: Geometric mean of the values.
+    """
+    return np.exp(np.mean(np.log(data + 1)))

@@ -175,3 +175,5 @@ data/yt_metadata.jsonl.gz
 # Datasets for Max
 /IMDb 
 /YouNiverse
+/src/models/zero-shot-classification
+data/collaborations.jsonl.gz
