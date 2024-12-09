@@ -177,3 +177,4 @@ data/yt_metadata.jsonl.gz
 /YouNiverse
 /src/models/zero-shot-classification
 /zero-shot-classification
+data/collaborations.jsonl.gz
