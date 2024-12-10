@@ -272,6 +272,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
         "collaborations_count": "Number of Collaborations",
+        "colab_ratio": "Collaboration Ratio",
     }
 
     # If there's only one column, axs is not a list, so we make it iterable
@@ -307,32 +308,49 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             else:
                 stat = 'density' if density else 'count'
                 sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log, stat=stat, common_norm=False)
+                # Set titles and labels
+
+            if density:
+                axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Density", fontsize=16)
+            else:
+                axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Count", fontsize=16)
+            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
 
         elif kind == "violin":
-            sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.violinplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            axs[i].set_title(f"Violin plot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "boxplot":
             sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            axs[i].set_title(f"Boxplot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "kde":
-            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log, common_norm=False)
+            if density:
+                axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Density", fontsize=16)
+            else:
+                axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Count", fontsize=16)
+            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "boxenplot":
             sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            axs[i].set_title(f"Boxplot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
         else:
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
-
-        # Set titles and labels
-        if density:
-            axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
-            axs[i].set_ylabel("Density", fontsize=16)
-        else:
-            axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
-            axs[i].set_ylabel("Count", fontsize=16)
-
-        axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
 
         # Apply y-axis log scale if specified
         if y_log:
             axs[i].set_yscale('log')
 
+    plt.grid(True, alpha=0.35)
     plt.tight_layout()
     plt.show()
 
