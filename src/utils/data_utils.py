@@ -289,7 +289,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             if y_log:
                 kde = False
             if marker_only:
-                markers = ['o', 's', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_']
+                markers = ['o', '.', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_', 's']
                 if x_log:
                     bins = np.geomspace(df[col].min(), df[col].max(), 80)
                 else:
