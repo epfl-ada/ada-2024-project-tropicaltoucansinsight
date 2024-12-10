@@ -4,8 +4,9 @@ data_utils.py
 These might include helper functions for data transformations, cleaning, augmentations, or any operations used
 repeatedly within the dataloading process.
 """
-
+import re
 import os
+import gzip
 import requests
 import numpy as np
 import pandas as pd
@@ -177,6 +178,7 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
         "view_count":"Number of Views",
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
+        "collaborations_count": "Number of Collaborations",
     }
 
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
@@ -267,6 +269,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         "view_count":"Number of Views",
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
+        "collaborations_count": "Number of Collaborations",
     }
 
     # If there's only one column, axs is not a list, so we make it iterable
@@ -633,3 +636,74 @@ def geometric_mean(data):
         float: Geometric mean of the values.
     """
     return np.exp(np.mean(np.log(data + 1)))
+
+
+def detect_collaboration(text, collaboration_patterns=None):
+    """
+    Detect if the text indicates a collaboration.
+
+    Args:
+        text (str): Text to analyze.
+        collaboration_patterns (list): List of regex patterns to detect collaborations.
+
+    Returns:
+        bool: True if collaboration is detected, False otherwise.
+    """
+    # Default collaboration patterns
+    if collaboration_patterns is None:
+        collaboration_patterns = [r'\bfeat\b', r'\bft\b', r'\bfeaturing\b', r'\bx\b', r'\bw/\b', r'\bft\.\b']
+
+    # Combine patterns into a single regex pattern
+    pattern = re.compile('|'.join(collaboration_patterns), flags=re.IGNORECASE)
+
+    return bool(pattern.search(text))
+
+
+def preprocess_collaborations(chunk_df, collaboration_patterns=None):
+    """
+    Preprocess a chunk of data
+
+    Args:
+        chunk_df (pd.DataFrame): Chunk of data
+        collaboration_patterns (list): List of regex patterns to detect collaborations.
+
+    Returns:
+        pd.DataFrame: Processed data
+    """
+    # Drop rows with missing values
+    chunk_df = chunk_df.dropna(how='any')
+
+    # Only keep Music and Entertainment categories with selected columns
+    chunk_df = chunk_df[chunk_df['categories'].isin(['Music','Entertainment'])]
+    columns_to_keep = ['categories', 'title', 'description', 'tags', 'view_count',
+                       'like_count', 'dislike_count', 'channel_id', 'upload_date']
+    chunk_df = chunk_df[columns_to_keep]
+
+    # Only keep rows where the title indicates a collaboration
+    chunk_df = chunk_df[chunk_df['title'].apply(detect_collaboration)]
+
+    return chunk_df
+
+
+def process_data(file_path, chunk_size, preprocess_func, output_path, collaboration_patterns=None):
+    """
+    Process a JSONL file in chunks and apply a preprocessing function to each chunk.
+
+    Args:
+        file_path (str): Path to the gzipped JSONL file.
+        chunk_size (int): Number of rows to process per chunk.
+        preprocess_func (callable): Function to apply to each chunk of data (Pandas DataFrame).
+        output_path (str): Path to store the processed data.
+        collaboration_patterns (list): List of regex patterns to detect collaborations.
+
+    Returns:
+        None
+    """
+    with pd.read_json(file_path, lines=True, compression="gzip", chunksize=chunk_size) as reader:
+        for chunk_df in reader:
+            # Apply preprocessing function to the chunk
+            processed_df = preprocess_func(chunk_df)
+
+            # Append the processed chunk to the output file
+            processed_df.to_json(output_path, orient="records", lines=True,
+                                 force_ascii=False, compression='gzip', mode='a')
