@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 
 def get_data(datasets, target_dir="data"):
@@ -179,6 +180,7 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
         "collaborations_count": "Number of Collaborations",
+        "colab_ratio": "Collaboration Ratio",
     }
 
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
@@ -525,9 +527,9 @@ def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size
     Process a large JSONL file by reading it in chunks, grouping the data by a specified column, and saving each group to a separate Parquet file.
 
     Args:
-        data_filename (str): Path to the data file.
-        chunk_size (int): The number of rows to read in each chunk.
-        column_to_group (str): The column to group the data by.
+        data_filename (str): Path to the data file
+        chunk_size (int): The number of rows to read in each chunk
+        column_to_group (str): The column to group the data by
     """
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
         for chunk in reader:
@@ -545,11 +547,11 @@ def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size
 
 def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000):
     """
-    Convert a JSONL file to Parquet format.
+    Convert a JSONL file to Parquet format
 
     Args:
-        data_filename (str): Path to the JSONL file.
-        output_filename (str): Path to the output Parquet file.
+        data_filename (str): Path to the JSONL file
+        output_filename (str): Path to the output Parquet file
     """
     dfs = []
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
@@ -561,13 +563,13 @@ def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000)
 
 def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20"):
     """
-    Plot a pie chart for the specified column in the DataFrame.
+    Plot a pie chart for the specified column in the DataFrame
 
     Args:
-        df (pd.DataFrame): The DataFrame containing the data.
-        column (str): The column to plot.
-        title (str): The title of the pie chart.
-        values (str): The column containing the values to sum for each category.
+        df (pd.DataFrame): The DataFrame containing the data
+        column (str): The column to plot
+        title (str): The title of the pie chart
+        values (str): The column containing the values to sum for each category
         threshold (int): The threshold percentage for displaying the labels outside the pie chart
     """
     custom_label = {
@@ -627,27 +629,27 @@ def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20")
 
 def geometric_mean(data):
     """
-    Compute the geometric mean of a list of values.
+    Compute the geometric mean of a list of values
 
     Args:
-        data (df.Series): List of values.
+        data (df.Series): List of values
 
     Returns:
-        float: Geometric mean of the values.
+        float: Geometric mean of the values
     """
     return np.exp(np.mean(np.log(data + 1)))
 
 
 def detect_collaboration(text, collaboration_patterns=None):
     """
-    Detect if the text indicates a collaboration.
+    Detect if the text indicates a collaboration
 
     Args:
-        text (str): Text to analyze.
-        collaboration_patterns (list): List of regex patterns to detect collaborations.
+        text (str): Text to analyze
+        collaboration_patterns (list): List of regex patterns to detect collaborations
 
     Returns:
-        bool: True if collaboration is detected, False otherwise.
+        bool: True if collaboration is detected, False otherwise
     """
     # Default collaboration patterns
     if collaboration_patterns is None:
@@ -687,14 +689,14 @@ def preprocess_collaborations(chunk_df, collaboration_patterns=None):
 
 def process_data(file_path, chunk_size, preprocess_func, output_path, collaboration_patterns=None):
     """
-    Process a JSONL file in chunks and apply a preprocessing function to each chunk.
+    Process a JSONL file in chunks and apply a preprocessing function to each chunk
 
     Args:
-        file_path (str): Path to the gzipped JSONL file.
-        chunk_size (int): Number of rows to process per chunk.
-        preprocess_func (callable): Function to apply to each chunk of data (Pandas DataFrame).
-        output_path (str): Path to store the processed data.
-        collaboration_patterns (list): List of regex patterns to detect collaborations.
+        file_path (str): Path to the gzipped JSONL file
+        chunk_size (int): Number of rows to process per chunk
+        preprocess_func (callable): Function to apply to each chunk of data (Pandas DataFrame)
+        output_path (str): Path to store the processed data
+        collaboration_patterns (list): List of regex patterns to detect collaborations
 
     Returns:
         None
@@ -707,3 +709,38 @@ def process_data(file_path, chunk_size, preprocess_func, output_path, collaborat
             # Append the processed chunk to the output file
             processed_df.to_json(output_path, orient="records", lines=True,
                                  force_ascii=False, compression='gzip', mode='a')
+
+
+def process_video_counts(data_file, chunk_size, output_path='data/video_counts.jsonl.gz'):
+    """
+    Process a JSONL file containing video data to count the number of videos per channel
+
+    Args:
+        data_file (str): Path to the gzipped JSONL file
+        chunk_size (int): Number of rows to process per chunk
+        output_path (str): Path to store the processed data
+
+    Returns:
+        None
+    """
+    # Initialize a defaultdict to store the video counts per channel
+    video_counts = defaultdict(int)
+
+    # Process the data in chunks
+    for i, chunk in enumerate(pd.read_json(data_file, chunksize=chunk_size, dtype={'channel_id': 'str'}, lines=True, compression='gzip')):
+        counts = chunk['channel_id'].value_counts()
+        for creator_id, count in counts.items():
+            video_counts[creator_id] += count
+
+    # Create a DataFrame from the video counts
+    df_counts = pd.DataFrame(list(video_counts.items()), columns=['channel_id', 'video_count'])
+
+    # Save the results to a compressed JSONL file
+    print("Sauvegarde des résultats dans le fichier JSONL compressé...")
+    df_counts.to_json(
+        path_or_buf=output_path,
+        orient='records',
+        lines=True,
+        compression='gzip',
+        force_ascii=False
+    )

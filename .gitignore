@@ -178,3 +178,4 @@ data/yt_metadata.jsonl.gz
 /src/models/zero-shot-classification
 /zero-shot-classification
 data/collaborations.jsonl.gz
+data/video_counts.jsonl.gz
