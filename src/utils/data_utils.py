@@ -762,3 +762,73 @@ def process_video_counts(data_file, chunk_size, output_path='data/video_counts.j
         compression='gzip',
         force_ascii=False
     )
+
+
+def get_upload_evolution(df_music, df_entertainment, period=None, cumulative=True):
+    """
+    Plot the evolution of video uploads for "Music" and "Entertainment" categories over time
+
+    Args:
+        df_music (pandas.DataFrame): DataFrame containing upload dates for the "Music" category.
+        df_entertainment (pandas.DataFrame): DataFrame containing upload dates for the "Entertainment" category.
+        period (str, optional): Time period for aggregating uploads. Valid values are:
+            - 'Y': Yearly
+            - 'M': Monthly
+            - 'W': Weekly
+            - 'D': Daily
+            If None, the function plots cumulative uploads over time
+        cumulative (bool, optional): Whether to plot cumulative uploads over time. Ignored if `period` is provided
+    """
+
+    # Create a DataFrame with sorted upload dates for each category
+    df_music_upload = pd.DataFrame(pd.to_datetime(df_music["upload_date"].copy()).sort_values(), columns=["upload_date"])
+    df_music_upload["cumulative"] = range(1, len(df_music_upload) + 1)
+    df_entertainment_upload = pd.DataFrame(pd.to_datetime(df_entertainment["upload_date"].copy()).sort_values(), columns=["upload_date"])
+    df_entertainment_upload["cumulative"] = range(1, len(df_entertainment_upload) + 1)
+
+    # If no period is given, plot the cumulative evolution
+    if period == None and cumulative:
+        x_min = df_entertainment_upload["upload_date"].min() if (df_entertainment_upload["upload_date"].min()
+                                                                 < df_music_upload["upload_date"].min()) else df_music_upload["upload_date"].min()
+        x_max = pd.Timestamp("2019-10")
+
+        # Comparison between the 2 categories
+        plt.figure(figsize=(20, 8))
+        plt.plot(df_music_upload["upload_date"], df_music_upload["cumulative"], label="Music")
+        plt.plot(df_entertainment_upload["upload_date"], df_entertainment_upload["cumulative"], label="Entertainment")
+        plt.xlim(x_min, x_max)
+        plt.xlabel("Upload Date")
+        plt.ylabel("Cumulative Number of Uploads")
+        plt.title("Cumulative Growth of Collaborative Video Uploads")
+        plt.legend(fontsize=25)
+        plt.grid(True, alpha=0.3)
+        plt.show()
+    else:
+        valid_periods = {"Y", "M", "W", "D"}
+        if period not in valid_periods:
+            raise ValueError(f"Invalid period. Expected one of {valid_periods}, got '{period}' instead.")
+
+        # Music
+        df_music_period = df_music_upload.groupby(df_music_upload['upload_date'].dt.to_period(period)).size().reset_index(name='uploads')
+        df_music_period["upload_date"] = df_music_period["upload_date"].dt.to_timestamp()
+
+        # Entertainment
+        df_entertainment_period = df_entertainment_upload.groupby(df_entertainment_upload['upload_date'].dt.to_period(period)).size().reset_index(name='uploads')
+        df_entertainment_period["upload_date"] = df_entertainment_period["upload_date"].dt.to_timestamp()
+
+        # Computing limits for the plot
+        x_min = min(df_music_period["upload_date"].min(), df_entertainment_period["upload_date"].min())
+        x_max = pd.Timestamp("2019-09")
+
+        # Comparison between the two categories
+        plt.figure(figsize=(20, 8))
+        sns.lineplot(x='upload_date', y='uploads', data=df_music_period, label="Music")
+        sns.lineplot(x='upload_date', y='uploads', data=df_entertainment_period, label="Entertainment")
+        plt.xlim(x_min, x_max)
+        period_label = {"M": "Month", "D": "Day", "Y": "Year", "W": "Week"}
+        plt.xlabel(f"Upload Date ({period_label[period]})")
+        plt.ylabel(f"Number of Uploads per {period_label[period]}")
+        plt.title(f"Trend of Collaborative Video Uploads by {period_label[period]}")
+        plt.legend(fontsize=25)
+        plt.grid(True, alpha=0.3)
+        plt.show()
