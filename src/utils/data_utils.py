@@ -832,3 +832,40 @@ def get_upload_evolution(df_music, df_entertainment, period=None, cumulative=Tru
         plt.legend(fontsize=25)
         plt.grid(True, alpha=0.3)
         plt.show()
+
+
+def plot_collaboration_stats(stats_music, stats_entertainment, metrics, titles, ylabel, figsize=(40, 10), ylog=None):
+    """
+    Plots bar charts for a given set of metrics and their corresponding titles
+
+    Args:
+        stats_music (pandas.DataFrame): DataFrame for the "Music" category
+        stats_entertainment (pandas.DataFrame): DataFrame for the "Entertainment" category
+        metrics (list of tuples): List of tuples, each containing two column names (music_metric, entertainment_metric)
+        titles (list of str): List of titles for each subplot
+        ylabel (list of str): List of y-axis labels for each subplot
+        figsize (tuple): Tuple, the size of the figure
+        ylog (list of bool): List of booleans, if True sets log scale on the corresponding plot
+    """
+    num_metrics = len(metrics)
+    if ylog is None:
+        ylog = [False] * num_metrics
+
+    _, ax = plt.subplots(1, num_metrics, figsize=figsize, sharex=True)
+
+    for i, ((music_metric, entertainment_metric), title, y_label, log_scale) in enumerate(zip(metrics, titles, ylabel, ylog)):
+        sns.barplot(x=stats_music["colab_range"], y=stats_music[music_metric],
+                    alpha=0.6, label="Music", width=0.7, ax=ax[i])
+        sns.barplot(x=stats_entertainment["colab_range"], y=stats_entertainment[entertainment_metric],
+                    alpha=0.6, label="Entertainment", width=0.7, ax=ax[i])
+        ax[i].set_title(title, fontsize=30)
+        ax[i].set_ylabel(y_label)
+        if log_scale:
+            ax[i].set_yscale('log')
+
+    for a in ax:
+        a.set_xlabel("Collaboration Ratio Range")
+        a.tick_params(axis='x', rotation=90)
+
+    plt.tight_layout()
+    plt.show()
