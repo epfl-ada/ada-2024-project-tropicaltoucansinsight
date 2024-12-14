@@ -705,6 +705,12 @@ def preprocess_collaborations(chunk_df, collaboration_patterns=None):
     return chunk_df
 
 
+def filter_categories(chunk_df, categories=None):
+    if categories is None:
+        categories = ['Music', 'Entertainment']
+    return chunk_df[chunk_df['categories'].isin(categories)]
+
+
 def process_data(file_path, chunk_size, preprocess_func, output_path, collaboration_patterns=None):
     """
     Process a JSONL file in chunks and apply a preprocessing function to each chunk
@@ -762,6 +768,40 @@ def process_video_counts(data_file, chunk_size, output_path='data/video_counts.j
         compression='gzip',
         force_ascii=False
     )
+
+
+def filter_by_channels(chunk_df, channel_ids):
+    return chunk_df[chunk_df['channel_id'].isin(channel_ids)]
+
+
+def process_by_collaboration_ranges(df, input_path, chunk_size=100_000, verbose=False):
+    """
+    Process the data by collaboration ratio ranges
+
+    Args:
+        df (pandas.DataFrame): DataFrame containing the collaboration ratio ranges
+        input_path (str): Path to the gzipped JSONL file to process
+        chunk_size (int): Number of rows to process per chunk
+        verbose (bool): Whether to display progress information
+    """
+    # Group df by the collaboration ratio range
+    df_grouped = df.groupby('colab_range', observed=False)
+
+    # Iterate over the groups
+    for bin, df_bin in sorted(df_grouped, key=lambda x: x[0].left, reverse=True):
+        if verbose:
+            print(f"- Processing data for collaboration range: {bin}")
+
+        channels = df_bin['channel_id'].unique()
+        bin_name = f"{bin.left:.3f}_{bin.right:.3f}"
+        output_path = f"data/collab_ratio_ranges/collaborations_{bin_name}.jsonl.gz"
+        process_data(input_path,
+                     chunk_size=chunk_size,
+                     preprocess_func=lambda chunk_df: filter_by_channels(chunk_df, channels),
+                     output_path=output_path)
+
+        if verbose:
+            print(f"    --> Finished processing for collaboration range: {bin}")
 
 
 def get_upload_evolution(df_music, df_entertainment, period=None, cumulative=True):
@@ -869,3 +909,6 @@ def plot_collaboration_stats(stats_music, stats_entertainment, metrics, titles, 
 
     plt.tight_layout()
     plt.show()
+
+
+
