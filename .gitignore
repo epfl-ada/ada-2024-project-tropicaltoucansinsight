@@ -179,3 +179,7 @@ data/yt_metadata.jsonl.gz
 /zero-shot-classification
 data/collaborations.jsonl.gz
 data/video_counts.jsonl.gz
+test.ipynb
+data/collab_ratio_ranges/collaborations_0.975_1.000.jsonl.gz
+data/yt_metadata_filtered.jsonl.gz
+/data/collab_ratio_ranges
