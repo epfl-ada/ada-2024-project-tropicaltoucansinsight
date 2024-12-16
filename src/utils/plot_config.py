@@ -14,7 +14,7 @@ matplotlib.rcParams['figure.figsize'] = (8, 6)   # Set the default figure size
 
 # Customize axes
 matplotlib.rcParams['axes.labelsize'] = 22       # Axis label font size
-matplotlib.rcParams['axes.titlesize'] = 36       # Axis title font size
+matplotlib.rcParams['axes.titlesize'] = 25       # Axis title font size
 matplotlib.rcParams['axes.linewidth'] = 2        # Axis line width
 
 # Customize ticks

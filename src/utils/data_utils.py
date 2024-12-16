@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from collections import defaultdict
 
 
@@ -233,7 +234,7 @@ def upper_case_first_letter(s):
     return s[0].upper() + s[1:]
 
 
-def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False, density=False):
+def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False, density=False, showmeans=True):
     """
     Plot the distribution of the columns for the given categories.
 
@@ -251,7 +252,13 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
     # TODO: set the same color palette as the pie chart
 
     # Filter for the selected categories
-    df = df_data[df_data[hue].isin(categories)].copy()
+    if "True" or "False" in categories:
+        # convert string to boolean
+        categories_bool = [True if cat == "True" else False for cat in categories]
+        df = df_data[df_data[hue].isin(categories_bool)].copy()
+    else:
+        df = df_data[df_data[hue].isin(categories)].copy()
+
     df = df.rename(columns={hue: upper_case_first_letter(hue)})
     hue = upper_case_first_letter(hue)
 
@@ -308,7 +315,6 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             else:
                 stat = 'density' if density else 'count'
                 sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log, stat=stat, common_norm=False)
-                # Set titles and labels
 
             if density:
                 axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
@@ -324,9 +330,14 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
 
         elif kind == "boxplot":
-            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log,
+                        showmeans=showmeans, meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 8, 'markerfacecolor': 'red'})
             axs[i].set_title(f"Boxplot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
             axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
+            if showmeans:
+                mean_marker = Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black', markersize=10, label='Means')
+                axs[i].legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1.05, 1))
 
         elif kind == "kde":
             sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log, common_norm=False)
@@ -679,13 +690,32 @@ def detect_collaboration(text, collaboration_patterns=None):
     return bool(pattern.search(text))
 
 
-def preprocess_collaborations(chunk_df, collaboration_patterns=None):
+def detect_non_collaboration(text, collaboration_patterns=None):
+    """
+    Detect if the text does NOT indicate a collaboration
+
+    Args:
+        text (str): Text to analyze
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+
+    Returns:
+        bool: True if no collaboration is detected, False otherwise
+    """
+    return not detect_collaboration(text, collaboration_patterns)
+
+
+def preprocess_non_collaborations(chunk_df):
+    return preprocess_collaborations(chunk_df, collaboration_patterns=None, non_collaborations_only=True)
+
+
+def preprocess_collaborations(chunk_df, collaboration_patterns=None, non_collaborations_only=False):
     """
     Preprocess a chunk of data
 
     Args:
         chunk_df (pd.DataFrame): Chunk of data
-        collaboration_patterns (list): List of regex patterns to detect collaborations.
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+        non_collaborations_only (bool): Whether to keep only rows where the title does not indicate a collaboration
 
     Returns:
         pd.DataFrame: Processed data
@@ -699,13 +729,28 @@ def preprocess_collaborations(chunk_df, collaboration_patterns=None):
                        'like_count', 'dislike_count', 'channel_id', 'upload_date']
     chunk_df = chunk_df[columns_to_keep]
 
-    # Only keep rows where the title indicates a collaboration
-    chunk_df = chunk_df[chunk_df['title'].apply(detect_collaboration)]
+    if non_collaborations_only:
+        # Only keep rows where the title does not indicate a collaboration
+        chunk_df = chunk_df[chunk_df['title'].apply(detect_non_collaboration)]
+    else:
+        # Only keep rows where the title indicates a collaboration
+        chunk_df = chunk_df[chunk_df['title'].apply(detect_collaboration)]
 
     return chunk_df
 
 
 def filter_categories(chunk_df, categories=None):
+    """
+    Filter the data by categories
+
+    Args:
+        chunk_df (pd.DataFrame): Chunk of data
+        categories (list): List of categories to keep
+
+    Returns:
+        pd.DataFrame: Filtered data
+    """
+    chunk_df.dropna()
     if categories is None:
         categories = ['Music', 'Entertainment']
     return chunk_df[chunk_df['categories'].isin(categories)]
@@ -725,14 +770,32 @@ def process_data(file_path, chunk_size, preprocess_func, output_path, collaborat
     Returns:
         None
     """
+    # Check if output_path is a directory
+    is_directory = not output_path.endswith(".jsonl.gz")
+
+    if is_directory:
+        os.makedirs(output_path, exist_ok=True)
+
     with pd.read_json(file_path, lines=True, compression="gzip", chunksize=chunk_size) as reader:
-        for chunk_df in reader:
+        for i, chunk_df in enumerate(reader):
+            print(f"Processing chunk {i + 1}...")
+
             # Apply preprocessing function to the chunk
             processed_df = preprocess_func(chunk_df)
 
-            # Append the processed chunk to the output file
-            processed_df.to_json(output_path, orient="records", lines=True,
-                                 force_ascii=False, compression='gzip', mode='a')
+            if is_directory:
+                # Save to separate files for each category
+                processed_df_grouped = processed_df.groupby('categories')
+                for category, df_group in processed_df_grouped:
+                    category_output_path = os.path.join(output_path, f"{category}.jsonl.gz")
+                    print(f"Saving {len(df_group)} rows to {category_output_path}")
+                    df_group.to_json(category_output_path, orient="records", lines=True,
+                                     force_ascii=False, compression='gzip', mode='a')
+            else:
+                # Save to a single output file
+                print(f"Saving chunk to {output_path}")
+                processed_df.to_json(output_path, orient="records", lines=True,
+                                     force_ascii=False, compression='gzip', mode='a')
 
 
 def process_video_counts(data_file, chunk_size, output_path='data/video_counts.jsonl.gz'):
