@@ -105,37 +105,34 @@ def plot_metric(df_music_metric_values, df_entertainment_metric_values):
     """
 
     # Music category mean and standard
-    df_music_applied = df_music_metric_values.apply([np.mean, np.std], axis=0)
+    df_music_applied = df_music_metric_values.apply([np.mean, np.std, np.median], axis=0)
     df_music_applied.loc['std'] = df_music_applied.loc['std'].multiply(1/np.sqrt(len(df_music_metric_values)))
     music1 = df_music_applied.loc['mean'] + df_music_applied.loc['std']
     music2 = df_music_applied.loc['mean'] - df_music_applied.loc['std']
 
     # Entertainment category mean and standard
-    df_entertainment_applied = df_entertainment_metric_values.apply([np.mean, np.std], axis=0)
+    df_entertainment_applied = df_entertainment_metric_values.apply([np.mean, np.std, np.median], axis=0)
     # TODO: Check that we can actually divide by square root of number of entries
     df_entertainment_applied.loc['std'] = df_entertainment_applied.loc['std'].multiply(1/np.sqrt(len(df_entertainment_metric_values)))
     entertainment1 = df_entertainment_applied.loc['mean'] + df_entertainment_applied.loc['std']
     entertainment2 = df_entertainment_applied.loc['mean'] - df_entertainment_applied.loc['std']
 
-    # Subplots
-    fig, axs = plt.subplots(1, 2, figsize=(15, 7), sharex=True, sharey=True)
+    # Plots
+    fig = plt.figure(figsize=(15, 7))
 
-    axs[0].plot(df_music_applied.columns, df_music_applied.loc['mean'], color='g', label='Mean $\mu$')
-    axs[0].fill_between(df_music_applied.columns, y1=music1, y2=music2, alpha=0.5, label='$\mu\pm\sigma/\sqrt{N}$')
-    axs[0].set_title('Music Category')
-    axs[0].set_xlabel('# of Weeks')
-    axs[0].set_ylabel('$\Delta$Views')
-    axs[0].tick_params(axis='x', rotation=90)
-    axs[0].legend()
+    plt.plot(df_music_applied.columns, df_music_applied.loc['mean'], color='blue', label='Music Mean $\mu$')
+    plt.fill_between(df_music_applied.columns, y1=music1, y2=music2, alpha=0.5, label='Music $\mu\pm\sigma/\sqrt{N}$')
+    plt.plot(df_music_applied.columns, df_music_applied.loc['median'], color='green', label='Music Median')
 
-    axs[1].plot(df_entertainment_applied.columns, df_entertainment_applied.loc['mean'], color='g', label='Mean $\mu$')
-    axs[1].fill_between(df_entertainment_applied.columns, y1=entertainment1, y2=entertainment2, alpha=0.5, label='$\mu\pm\sigma/\sqrt{N}$')
-    axs[1].set_title('Entertainment Category')
-    axs[1].set_xlabel('# of Weeks')
-    axs[1].set_ylabel('$\Delta$Views')
-    axs[1].tick_params(axis='x', rotation=90)
-    axs[1].legend()
+    plt.plot(df_entertainment_applied.columns, df_entertainment_applied.loc['mean'], color='red', label='Entertainment Mean $\mu$')
+    plt.fill_between(df_entertainment_applied.columns, y1=entertainment1, y2=entertainment2, alpha=0.5, label='Entertainment $\mu\pm\sigma/\sqrt{N}$')
+    plt.plot(df_music_applied.columns, df_entertainment_applied.loc['median'], color='k', label='Entertainment Median')
 
+    plt.title(f'Time Evolution of $\Delta$Views for {df_music_applied.columns[-1]} weeks')
+    plt.xlabel('# of Weeks')
+    plt.ylabel('$\Delta$Views')
+    plt.tick_params(axis='x', rotation=90)
+    plt.legend(loc='upper right')
     plt.tight_layout()
     plt.show()
 
@@ -432,23 +429,35 @@ def return_times_results_and_histograms(music_return_times, entertainment_return
     Return: None
     """
 
-    # Access aggregated results for Music
-    print("Music Average return time:", music_return_times['avg_return_time'])
-    print("Music Standard deviation of return time:", music_return_times['std_return_time'])
-    print("Music propotion of return: ", music_return_times['avg_proportion_returning'])
+    # Load return times
+    return_times_music = music_return_times['return_times']
+    return_times_ent = entertainment_return_times['return_times']
 
-    # Access aggregated results for Entertainment
-    print("Entertainment Average return time:", entertainment_return_times['avg_return_time'])
-    print("Entertainment Standard deviation of return time:", entertainment_return_times['std_return_time'])
-    print("Entertainment propotion of return: ", entertainment_return_times['avg_proportion_returning'])
+    # Filter out Nan values
+    return_times_music = return_times_music[~np.isnan(return_times_music)]
+    return_times_ent = return_times_ent[~np.isnan(return_times_ent)]
 
-    # Plot histogram of per-channel average return times
-
+    # Load results dataframe
     results_df_music = music_return_times['results_df']
     results_df_ent = entertainment_return_times['results_df']
 
-    plt.hist(results_df_ent['avg_return_time'].dropna(), bins=20, alpha=0.7, log=True, label='Entertainment', density=True)
-    plt.hist(results_df_music['avg_return_time'].dropna(), bins=20, alpha=0.4, log=True, label='Music', density=True)
+    # Access aggregated results for Music
+    print(f"Music Mean Channel Average Return Time: {music_return_times['avg_return_time']:.2f} Weeks")
+    print(f"Music Standard Deviation of Mean Return Time: {music_return_times['std_return_time']/len(results_df_music['avg_return_time']):.5f} Weeks")
+    print(f"Music Mean Return Time: {np.mean(return_times_music):.2f}")
+    print(f"Music Propotion of Return: {music_return_times['avg_proportion_returning']*100:.2f}%")
+    print(f'Number of Music Peaks: {len(return_times_music)} \n')
+
+    # Access aggregated results for Entertainment
+    print(f"Entertainment Mean Channel Average Return Time: {entertainment_return_times['avg_return_time']:.2f} Weeks")
+    print(f"Entertainment Standard Deviation of Mean Return Time: {entertainment_return_times['std_return_time']/len(results_df_ent['avg_return_time']):.5f} Weeks")
+    print(f"Entertainment Mean Return Time: {np.mean(return_times_ent):.2f}")
+    print(f"Entertainment Propotion of Return: {entertainment_return_times['avg_proportion_returning']*100:.2f}%")
+    print(f'Number of Entertainment Peaks: {len(return_times_ent)}')
+
+    # Plot histogram of per-channel average return times
+    plt.hist(results_df_music['avg_return_time'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(results_df_ent['avg_return_time'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
     plt.xlabel('Return Time (weeks)')
     plt.ylabel('Number of Channels')
     plt.title('Histogram of Average Return Times')
@@ -456,24 +465,13 @@ def return_times_results_and_histograms(music_return_times, entertainment_return
     plt.show()
 
     # Plot histogram of return times for Music and Entertainment
-    return_times_music = music_return_times['return_times']
-    return_times_ent = entertainment_return_times['return_times']
-
-    return_times_music = return_times_music[~np.isnan(return_times_music)]
-    return_times_ent = return_times_ent[~np.isnan(return_times_ent)]
-
-    plt.hist(return_times_ent, bins=20, alpha=0.7, log=True, label='Entertainment', density=True)
-    plt.hist(return_times_music, bins=20, alpha=0.4, log=True, label='Music', density=True)
+    plt.hist(return_times_music, bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(return_times_ent, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
     plt.xlabel('Return Time (weeks)')
-    plt.ylabel('Number of Channels')
+    plt.ylabel('Number of Entries')
     plt.title('Histogram of Return Times')
     plt.legend()
     plt.show()
-
-    # Total number of peaks in Music and in Entertainment
-    print(f'Number of Music Peaks: {len(return_times_music)}')
-    print(f'Number of Entertainment Peaks: {len(return_times_ent)}')
-
 
 
 def modified_return_to_baseline_analysis(df, metric, baseline_window=4, tolerance=0.1, max_return_time=12, prom_percent=0.2):
@@ -666,36 +664,39 @@ def decay_rates_results_and_histograms(music_decay_rates, entertainment_decay_ra
     Return: None
     """
 
-    # Access aggregated results
-    print("Music Average Decay Rate:", music_decay_rates['avg_decay_rate'])
-    print("Music Standard deviation of Decay Rate:", music_decay_rates['std_decay_rate'])
+    # Load decay rates
+    ent_decay_peaks_all = entertainment_decay_rates['decay_rates']
+    music_decay_peaks_all = music_decay_rates['decay_rates']
 
+    # Load results dataframes
     music_decay_peaks_results = music_decay_rates['results_df']
-    print("Number of Peaks for Music:", music_decay_peaks_results['num_fitted_peaks'].sum())
+    ent_decay_peaks_results = entertainment_decay_rates['results_df']
 
     # Access aggregated results
-    print("Entertainment Average Decay Rate:", entertainment_decay_rates['avg_decay_rate'])
-    print("Entertainment Standard deviation of Decay Rate:", entertainment_decay_rates['std_decay_rate'])
+    print(f"Music Mean Channel Average Decay Rate: {music_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
+    print(f"Music Standard deviation of Decay Rate: {music_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Music Mean Decay Rate: {np.mean(music_decay_peaks_all):.3f}")
+    print(f"Number of Peaks for Music: {music_decay_peaks_results['num_fitted_peaks'].sum()} \n")
 
-    ent_decay_peaks_results = entertainment_decay_rates['results_df']
-    print("Number of Peaks for Entertainment:", ent_decay_peaks_results['num_fitted_peaks'].sum())
+    # Access aggregated results
+    print(f"Entertainment Mean Channel Average Decay Rate: {entertainment_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
+    print(f"Entertainment Standard deviation of Decay Rate: {entertainment_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Entertainment Mean Decay Rate: {np.mean(ent_decay_peaks_all):.3f}")
+    print(f"Number of Peaks for Entertainment: {ent_decay_peaks_results['num_fitted_peaks'].sum()}")
 
     # Histogram of per-channel average decay rates    
-    plt.hist(ent_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.7, log=True, label='Entertainment', density=True)
-    plt.hist(music_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.4, log=True, label='Music', density=True)
-    plt.xlabel('Decay Rate (1/# Weeks)')
+    plt.hist(music_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(ent_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Decay Rate (1/Weeks)')
     plt.ylabel('Number of Channels')
     plt.title('Histogram of Average Decay Rates')
     plt.legend()
     plt.show()
 
     # Histogram of decay rates for Music and Entertainment
-    ent_decay_peaks_all = entertainment_decay_rates['decay_rates']
-    music_decay_peaks_all = music_decay_rates['decay_rates']
-
-    plt.hist(ent_decay_peaks_all, bins=20, alpha=0.7, log=True, label='Entertainment', density=True)
-    plt.hist(music_decay_peaks_all, bins=20, alpha=0.4, log=True, label='Music', density=True)
-    plt.xlabel('Decay Rate (1/# Weeks)')
+    plt.hist(music_decay_peaks_all, bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(ent_decay_peaks_all, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Decay Rate (1/Weeks)')
     plt.ylabel('Number of Entries')
     plt.title('Histogram of Decay Rates')
     plt.legend()
