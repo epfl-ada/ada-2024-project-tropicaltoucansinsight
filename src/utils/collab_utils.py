@@ -169,7 +169,7 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.grid(True, alpha=0.4)
 
         if save:
-            output_path = "figures/pdf/Top_p_videos/"
+            output_path = "figures/pdf/"
             os.makedirs(output_path, exist_ok=True)
             plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
 
