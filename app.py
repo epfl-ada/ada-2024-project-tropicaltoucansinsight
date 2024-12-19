@@ -18,6 +18,12 @@ Some claim the greatest 21st-century showdown was Floyd Mayweather versus Logan 
 Leveraging the YouNiverse dataset, a massive collection of metadata covering **136k channels, 72.9M videos, and 2.8 years of time-series data**, we dive into YouTube’s top two categories. Join us as we analyze **reach, monetization**, and **audience dynamics**, uncovering the ultimate champion of YouTube's digital arena!
 """)
 
+st.markdown("""
+1. Justification du choix Music & Entertainment: 
+    - Camemberts + distributions 
+2. Différentes analyses
+""")
+
 # Sidebar for Navigation
 st.sidebar.title("Navigation")
 sections = [
