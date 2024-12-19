@@ -1,1 +1,0 @@
-`src/models/`: This directory holds code related to model definitions, architectures, and training code. It might include files that define neural networks or other machine learning models used in the project.

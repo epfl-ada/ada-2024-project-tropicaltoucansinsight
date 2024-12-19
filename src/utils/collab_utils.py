@@ -1,5 +1,7 @@
 """
-Helper functions to process the data analysis for collaborations
+collab_utils.py
+
+Helper functions to process the data analysis for collaborations.
 """
 
 import os
@@ -167,7 +169,7 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.grid(True, alpha=0.4)
 
         if save:
-            output_path = "Figures/Top_p_videos/"
+            output_path = "figures/pdf/Top_p_videos/"
             os.makedirs(output_path, exist_ok=True)
             plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
 
@@ -226,7 +228,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     if category not in ["Music", "Entertainment"]:
         raise ValueError("category must be either 'Music' or 'Entertainment'")
 
-    output_path = f"Figures/{category}/"
+    output_path = f"figures/pdf/{category}/"
     os.makedirs(output_path, exist_ok=True)
 
     fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
@@ -454,7 +456,7 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
         ax.legend(title="Category")
         plt.tight_layout()
         if save:
-            output_path = "Figures/Collaboration_ratio/"
+            output_path = "figures/pdf/Collaboration_ratio/"
             os.makedirs(output_path, exist_ok=True)
             plt.savefig(output_path + f"top_{p}_views__Histplot.pdf")
         plt.show()
@@ -482,7 +484,7 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
 
         plt.tight_layout()
         if save:
-            output_path = "Figures/Collaboration_ratio/"
+            output_path = "figures/pdf/Collaboration_ratio/"
             os.makedirs(output_path, exist_ok=True)
             plt.savefig(output_path + f"top_{p}_views__Boxplot.pdf")
         plt.show()
@@ -621,7 +623,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
     plt.tight_layout()
 
     if save:
-        output_path = "Figures/Collaboration_ratio/"
+        output_path = "figures/pdf/Collaboration_ratio/"
         os.makedirs(output_path, exist_ok=True)
         plt.savefig(output_path + f"top_{p}_channels__Histplot.pdf")
 

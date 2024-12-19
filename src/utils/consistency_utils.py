@@ -1,4 +1,9 @@
-# This script contains all the utility functions for data analysis and visualization for Part 4: Popularity Consistency
+"""
+collab_utils.py
+
+This script contains all the utility functions for data analysis and visualization 
+for Popularity Consistency.
+"""
 
 import numpy as np
 import pandas as pd

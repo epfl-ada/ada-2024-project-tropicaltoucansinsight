@@ -1,1 +1,0 @@
-`src/scripts/`: For one-time or periodic scripts, like data preprocessing, data cleaning, or other standalone tasks. These are often run only once, for example, to prepare the dataset initially or generate derived features.

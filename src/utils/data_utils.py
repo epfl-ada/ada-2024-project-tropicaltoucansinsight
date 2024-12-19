@@ -1,12 +1,11 @@
 """
 data_utils.py
 
-These might include helper functions for data transformations, cleaning, augmentations, or any operations used
+Include helper functions for data transformations, cleaning, augmentations, or any operations used
 repeatedly within the dataloading process.
 """
 import re
 import os
-import gzip
 import requests
 import numpy as np
 import pandas as pd
@@ -50,6 +49,25 @@ def get_data(datasets, target_dir="data"):
         else:
             print(f"{file_name} already exists in '{target_dir}'.")
 
+
+def check_latex_availability():
+    """
+    Checks if LaTeX is available in the current environment.
+
+    Returns:
+        bool: True if LaTeX is available, False otherwise.
+    """
+    try:
+        plt.rcParams['text.usetex'] = True
+        plt.text(0, 0, "Test", fontsize=12)
+        plt.close()
+        return True
+    except Exception as e:
+        print("LaTeX is not available. Error:", e)
+        return False
+    finally:
+        plt.rcParams['text.usetex'] = False
+        
 
 def save_plot(file_name):
     """
