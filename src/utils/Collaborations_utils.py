@@ -120,21 +120,30 @@ def collab_ratio(data_file, chunk_size=500000, output_path='data/collab_counts.j
     df_counts.to_json(path_or_buf=output_path, orient='records', lines=True, compression='gzip', force_ascii=False)
 
 
-def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top_p_entertainment, p, plot=True):
+def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top_p_entertainment, p, plot=True, save=True):
+    """
+    Print the results for the top p% of videos
+
+    Args:
+        df_views_music (pd.DataFrame): DataFrame containing the views of the music videos
+        df_top_p_music (pd.DataFrame): DataFrame containing the top p% of music videos
+        df_views_entertainment (pd.DataFrame): DataFrame containing the views of the entertainment videos
+        df_top_p_entertainment (pd.DataFrame): DataFrame containing the top p% of entertainment videos
+        p (float): Proportion of the total views to keep
+        plot (bool): If True, plot the results
+    """
     category_data = [
         ("Music", len(df_views_music), len(df_top_p_music), len(df_top_p_music) / len(df_views_music)),
         ("Entertainment", len(df_views_entertainment), len(df_top_p_entertainment),
-         len(df_top_p_entertainment) / len(df_views_entertainment)),
+         len(df_top_p_entertainment) / len(df_views_entertainment))
     ]
-
-    header = f"{'Category':<15} {'Original Number of Videos':<30} {'Top Videos':<20} {'Fraction':<10}"
-    print(f"Top {p * 100:.2f}% of videos")
-    print("-" * len(header))
-    print(header)
-    print("-" * len(header))
-
+    headers = ["Category", "Original Number of Videos", "Top Videos", "Fraction"]
+    table_data = []
     for category, original_count, top_count, fraction in category_data:
-        print(f"{category:<15} {original_count:<30} {top_count:<20} {fraction:<10.2%}")
+        table_data.append([category, original_count, top_count, f"{fraction:.2%}"])
+    print(f"Top {p * 100:.2f}%\n")
+    print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+
 
     if plot:
         fig, ax = plt.subplots(1, 1, figsize=(12, 8))
@@ -156,6 +165,12 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
 
         ax.set_ylim(0, 1)
         ax.grid(True, alpha=0.4)
+
+        if save:
+            output_path = "Figures/Top_p_videos/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
+
         plt.show()
 
 
