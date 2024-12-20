@@ -272,7 +272,10 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
             stat="density",
             ax=axes[1, i],  # Bottom row
             log_scale=x_log,
-            legend=False
+            legend=False,
+            element='step',
+            alpha=0.15,
+            linewidth=3,
         )
         axes[1, i].legend(title="Collaboration", labels=["Yes", "No"])
         axes[1, i].plot([], [], linestyle='--', color='red', label='Mean')
@@ -602,96 +605,72 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
     top_mean_entertainment = top_p_entertainment_channels["collab_ratio"].mean()
     bottom_mean_entertainment = bottom_p_entertainment_channels["collab_ratio"].mean()
 
-    if kind == "hist":
-        fig, ax = plt.subplots(1, 2, figsize=(25, 8), sharey=sharey)
+    top_p_music_channels["is_top"] = True
+    bottom_p_music_channels["is_top"] = False
+    top_p_entertainment_channels["is_top"] = True
+    bottom_p_entertainment_channels["is_top"] = False
 
-        sns.histplot(data=top_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
-                     log_scale=False, label="Top Music Channels", stat="density", alpha=0.3, fill=True, color=top_color)
+    music = pd.concat([top_p_music_channels, bottom_p_music_channels])
+    entertainment = pd.concat([top_p_entertainment_channels, bottom_p_entertainment_channels])
 
-        ax[0].axvline(top_mean_music, color=top_color, linestyle="--", label=rf"Top Mean = {top_mean_music * 100:.2f}%",
-                      linewidth=3)
+    # Music in blues, Entertainment in oranges
+    music_colors = ["#104469", "#02acf0"]
+    entertainment_colors = ["#f25202", "#f2a602"]
 
-        sns.histplot(data=bottom_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
-                     log_scale=False, label="Bottom Music Channels", stat="density", alpha=0.15, fill=True,
-                     color=bottom_color)
+    fig, axes = plt.subplots(2, 2, figsize=(14 * 2, 12),
+                             gridspec_kw={'height_ratios': [1, 3]}, sharex='col')
 
-        ax[0].axvline(bottom_mean_music, color=bottom_color, linestyle="-.",
-                      label=rf"Bottom Mean = {bottom_mean_music * 100:.2f}%", linewidth=3)
+    for i, (df, category) in enumerate(zip([music, entertainment], ["Music", "Entertainment"])):
 
-        ax[0].set_xlabel("Collaboration Ratio")
-        ax[0].set_ylabel("Normalized Number of Channels")
-        ax[0].set_title(f"Distribution of the Collaboration Ratio\n for Music Channels")
-        ax[0].legend()
-        ax[0].set_yscale("log")
+            sns.boxplot(
+                data=df,
+                y="is_top",
+                x="collab_ratio",
+                hue="is_top",
+                ax=axes[0, i],
+                orient="h",
+                showmeans=True,
+                meanline=True,
+                meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 10, 'markerfacecolor': 'red',
+                           'color': 'red', 'lw': 2},
+                showfliers=False,
+                legend=False,
+                fill=False,
+                palette=music_colors if category == "Music" else entertainment_colors
+            )
+            axes[0, i].set_xlabel("")
+            axes[0, i].set_ylabel("")
+            axes[0, i].set_yticklabels(["Bottom", "Top"], fontsize=30)
+            axes[0, i].set_title(f"Distribution of the Collaboration Ratio\n for {category} Channels")
+            axes[0, i].tick_params(axis='both', labelsize=30)
+            sns.histplot(
+                data=df,
+                x="collab_ratio",
+                hue="is_top",
+                hue_order=[False, True],
+                bins=80,
+                common_norm=False,
+                fill=True,
+                stat="density",
+                ax=axes[1, i],  # Bottom row
+                log_scale=False,
+                legend=False,
+                element='step',
+                alpha=0.15,
+                linewidth=3,
+                palette=music_colors if category == "Music" else entertainment_colors
+            )
+            axes[1, i].legend(title="Channels", labels=["Top", "Bottom"], fontsize=30, title_fontsize=32)
+            axes[1, i].plot([], [], linestyle='--', color='red', label='Mean')
+            axes[1, i].set_xlabel("Collaboration Ratio", fontsize=30)
+            axes[1, i].set_ylabel("Normalized Number of Channels", fontsize=30)
+            axes[1, i].set_yscale("log")
+            axes[1, i].tick_params(axis='both', labelsize=30)
 
-        sns.histplot(data=top_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step",
-                     linewidth=3,
-                     log_scale=False, label="Top Entertainment Channels", stat="density", alpha=0.3, fill=True,
-                     color=top_color)
-
-        ax[1].axvline(top_mean_entertainment, color=top_color, linestyle="--",
-                      label=rf"Top Mean = {top_mean_entertainment * 100:.2f}%", linewidth=3)
-
-        sns.histplot(data=bottom_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step",
-                     linewidth=3,
-                     log_scale=False, label="Bottom Entertainment Channels", stat="density", alpha=0.15, fill=True,
-                     color=bottom_color)
-
-        ax[1].axvline(bottom_mean_entertainment, color=bottom_color, linestyle="-.",
-                      label=rf"Bottom Mean = {bottom_mean_entertainment * 100:.2f}%", linewidth=3)
-        ax[1].set_xlabel("Collaboration Ratio")
-        ax[1].set_title(f"Distribution of the Collaboration Ratio \nfor Entertainment Channels")
-        ax[1].legend()
-        ax[1].set_yscale("log")
-        ax[1].set_ylim(1e-3, 1e2)
-
-        plt.tight_layout()
-
-        if save:
-            data_utils.save_plot(f"top_{p}_channels__Histplot", plt, overwrite=True)
-
-        plt.show()
-
-    elif kind == "boxplot":
-        top_p_music_channels["is_top"] = True
-        bottom_p_music_channels["is_top"] = False
-        top_p_entertainment_channels["is_top"] = True
-        bottom_p_entertainment_channels["is_top"] = False
-        music_df = pd.concat([top_p_music_channels, bottom_p_music_channels])
-        entertainment_df = pd.concat([top_p_entertainment_channels, bottom_p_entertainment_channels])
-
-        fig, ax = plt.subplots(1, 2, figsize=(25, 8), sharey=sharey)
-
-        sns.boxplot(data=music_df, x="is_top", hue="is_top", y="collab_ratio", ax=ax[0], showmeans=True, legend=False,
-                    meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 15, 'markerfacecolor': 'red'},
-                    showfliers=False, palette=[bottom_color, top_color])
-        ax[0].set_xlabel("Channels")
-        ax[0].set_ylabel("Collaboration Ratio")
-        ax[0].set_title(f"Distribution of the Collaboration Ratio\nfor Music Channels")
-        tick_positions = [0, 1]
-        tick_labels = ["Bottom Channels", "Top Channels"]
-        ax[0].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
-        ax[0].xaxis.set_major_formatter(ticker.FixedFormatter(tick_labels))
-        sns.boxplot(data=entertainment_df, x="is_top", hue="is_top", y="collab_ratio", ax=ax[1], showmeans=True, legend=False,
-                    meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 15, 'markerfacecolor': 'red'},
-                    showfliers=False, palette=[bottom_color, top_color])
-        ax[1].set_xlabel("Channels")
-        ax[1].set_ylabel("Collaboration Ratio")
-        ax[1].set_title(f"Distribution of the Collaboration Ratio \nfor Entertainment Channels")
-        ax[1].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
-        ax[1].xaxis.set_major_formatter(ticker.FixedFormatter(tick_labels))
-
-        plt.tight_layout()
-
-        if save:
-            if fig_name is None:
-                fig_name = f"top_{p}_channels__Boxplot"
-                if sharey:
-                    fig_name = f"top_{p}_channels__Boxplot_sharey"
-
-            data_utils.save_plot(fig_name, plt, overwrite=True)
-
-        plt.show()
+    plt.tight_layout()
+    if save:
+        data_utils.save_plot(f"top_{p}_channels__Hist_Boxplot", plt, overwrite=True)
+    plt.show()
 
 
 def test_distribution_top_vs_bottom(top_data, bottom_data, categories, columns, alpha=0.05):
