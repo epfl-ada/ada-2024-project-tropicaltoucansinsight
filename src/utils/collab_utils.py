@@ -238,6 +238,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     fig, axes = plt.subplots(2, len(columns), figsize=(12 * len(columns), 12),
                              gridspec_kw={'height_ratios': [1, 3]}, sharex='col')
 
+
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         # Horizontal boxplots on the top row
         sns.boxplot(
@@ -461,55 +462,57 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
     mean_music = music_grouped["collab_ratio"].mean()
     mean_entertainment = entertainment_grouped["collab_ratio"].mean()
 
-    music_color = "#1f77b4"
-    entertainment_color = "#ff7f0e"
-    if kind == "hist":
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-        sns.histplot(data=music_grouped, x="collab_ratio", bins=80, ax=ax, log_scale=False, label="Music", alpha=0.2,
-                     color=music_color, fill=True, linewidth=3, element="step")
-        ax.axvline(mean_music, linestyle="--", label=f"Mean Music: {mean_music:.2f}", linewidth=3, color=music_color)
-        sns.histplot(data=entertainment_grouped, x="collab_ratio", bins=80, ax=ax, log_scale=False,
-                     label="Entertainment",
-                     alpha=0.2, color=entertainment_color, fill=True, linewidth=3, element="step")
-        ax.axvline(mean_entertainment, linestyle="dotted", label=f"Mean Entertainment: {mean_entertainment:.2f}",
-                   linewidth=3, color=entertainment_color)
-        ax.set_xlabel("Collaboration Ratio")
-        ax.set_ylabel("Number of Channels")
-        ax.set_title(f"Distribution of the Collaboration Ratio\n for Music and Entertainment Channels")
-        ax.set_yscale("log")
-        ax.legend(title="Category")
-        plt.tight_layout()
-        if save:
-            data_utils.save_plot(f"top_{p}_views__Histplot", plt, overwrite=True)
+    music_grouped["category"] = "Music"
+    entertainment_grouped["category"] = "Entertainment"
+    df = pd.concat([music_grouped, entertainment_grouped])
 
-        plt.show()
+    fig, axes = plt.subplots(2, 1, figsize=(20, 12), gridspec_kw={'height_ratios': [1, 3]}, sharex='col')
+    sns.boxplot(
+        data=df,
+        x="collab_ratio",
+        hue="category",
+        y="category",
+        ax=axes[0],
+        orient="h",
+        showmeans=True,
+        meanline=True,
+        meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 10, 'markerfacecolor': 'red',
+                   'color': 'red', 'lw': 2},
+        showfliers=False,
+        legend=False,
+        fill=False,
+    )
+    axes[0].set_xlabel("")
+    axes[0].set_ylabel("")
+    axes[0].set_yticklabels(["Music", "Entertainment"], fontsize=30)
+    axes[0].set_title(f"Distribution of the Collaboration Ratio\n for Music and Entertainment Channels")
+    axes[0].tick_params(axis='both', labelsize=25)
 
-    else:
-        top_p_music["categories"] = "Music"
-        top_p_entertainment["categories"] = "Entertainment"
-        df = pd.concat([top_p_music, top_p_entertainment])
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-        sns.boxplot(
-            x="categories", y="collab_ratio", data=df,
-            hue="categories", ax=ax, showmeans=show_means,
-            meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 20, 'markerfacecolor': 'red'},
-            showfliers=False, palette=[music_color, entertainment_color]
-        )
-        ax.set_xlabel("Category")
-        ax.set_ylabel("Collaboration Ratio")
-        ax.set_title(f"Distribution of the Collaboration Ratio\n for Music and Entertainment Channels")
-        # ax.set_yscale("log")
+    sns.histplot(
+        data=df,
+        x="collab_ratio",
+        hue="category",
+        bins=80,
+        common_norm=False,
+        fill=True,
+        stat="density",
+        ax=axes[1],
+        log_scale=False,
+        legend=True,
+        element='step',
+        alpha=0.15,
+        linewidth=3,
+    )
+    axes[1].legend(title="Category", labels=["Music", "Entertainment"], fontsize=30, title_fontsize=32)
+    axes[1].set_xlabel("Collaboration Ratio", fontsize=30)
+    axes[1].set_ylabel("Normalized Number of Channels", fontsize=30)
+    axes[1].set_yscale("log")
+    axes[1].tick_params(axis='both', labelsize=25)
 
-        if show_means:
-            mean_marker = Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black',
-                                 markersize=20, label='Means')
-            ax.legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1, 0.9))
-
-        plt.tight_layout()
-        if save:
-            data_utils.save_plot(f"top_{p}_views__Boxplot", plt, overwrite=True)
-
-        plt.show()
+    plt.tight_layout()
+    if save:
+        data_utils.save_plot(f"Music_Entertainment_collab_ratio_distribution__Hist_Boxplot", plt, overwrite=True)
+    plt.show()
 
 
 def filter_channels_by_proportion(df_channels, p_threshold=0.9, top=True):
