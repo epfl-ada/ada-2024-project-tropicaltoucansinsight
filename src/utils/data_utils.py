@@ -69,7 +69,7 @@ def check_latex_availability():
         plt.rcParams['text.usetex'] = False
         
 
-def save_plot(file_name):
+def save_plot(file_name, _plt=plt):
     """
     Save the current matplotlib plot to a pickle file and a PDF file.
 
@@ -92,11 +92,11 @@ def save_plot(file_name):
         counter += 1
 
     # Save to PDF
-    plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
+    _plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
 
     # Save to pickle
     with open(pickle_file, 'wb') as f:
-        pickle.dump(plt.gcf(), f)
+        pickle.dump(_plt.gcf(), f)
 
 
 def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbose=True):

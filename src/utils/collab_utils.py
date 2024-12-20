@@ -4,7 +4,7 @@ collab_utils.py
 Helper functions to process the data analysis for collaborations.
 """
 
-import os
+
 import re
 import numpy as np
 import pandas as pd
@@ -169,9 +169,7 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.grid(True, alpha=0.4)
 
         if save:
-            output_path = "figures/pdf/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
+            data_utils.save_plot(f"top_{p}_views__Cumulative_Fraction.pdf", plt)
 
         plt.show()
 
@@ -228,9 +226,6 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     if category not in ["Music", "Entertainment"]:
         raise ValueError("category must be either 'Music' or 'Entertainment'")
 
-    output_path = f"figures/pdf/{category}/"
-    os.makedirs(output_path, exist_ok=True)
-
     fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         sns.histplot(data=data, x=col, hue="collab", hue_order=[False, True], bins=80, common_norm=False,
@@ -243,7 +238,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
             ax[i].set_yscale("log")
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__Hist.pdf")
+        data_utils.save_plot("Collab_vs_NonCollab__Hist.pdf", plt)
     plt.show()
 
     # Boxplot
@@ -264,7 +259,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     fig.legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1, 0.9))
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__Boxplot.pdf")
+        data_utils.save_plot("Collab_vs_NonCollab__Boxplot.pdf", plt)
     plt.show()
 
     # Complementary Cumulative Distribution Function (CCDF)
@@ -278,7 +273,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
         ax[i].legend(title="Collaboration", labels=["Yes", "No"])
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__CCDF.pdf")
+        data_utils.save_plot("Collab_vs_NonCollab__CCDF.pdf", plt)
     plt.show()
 
 
@@ -456,9 +451,7 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
         ax.legend(title="Category")
         plt.tight_layout()
         if save:
-            output_path = "figures/pdf/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Histplot.pdf")
+            data_utils.save_plot(f"top_{p}_views__Histplot.pdf", plt)
         plt.show()
 
     else:
@@ -484,9 +477,7 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
 
         plt.tight_layout()
         if save:
-            output_path = "figures/pdf/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Boxplot.pdf")
+            data_utils.save_plot(f"top_{p}_views__Boxplot.pdf", plt)
         plt.show()
 
 
@@ -623,9 +614,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
     plt.tight_layout()
 
     if save:
-        output_path = "figures/pdf/Collaboration_ratio/"
-        os.makedirs(output_path, exist_ok=True)
-        plt.savefig(output_path + f"top_{p}_channels__Histplot.pdf")
+        data_utils.save_plot(f"top_{p}_channels__Histplot.pdf", plt)
 
     plt.show()
 

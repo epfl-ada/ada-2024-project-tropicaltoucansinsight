@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from . import data_utils
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 
@@ -142,6 +143,7 @@ def plot_metric(df_music_metric_values, df_entertainment_metric_values):
     axs[1].legend()
 
     plt.tight_layout()
+    data_utils.save_plot('metric_evolution', plt)
     plt.show()
 
 
@@ -295,6 +297,7 @@ def plot_general_mean(df_music, df_ent, metric, log_scale=False):
     plt.xticks(rotation=60)
     if log_scale: plt.yscale('log')
     plt.tight_layout()
+    data_utils.save_plot('general_mean', plt)
     plt.show() 
 
 
@@ -337,6 +340,7 @@ def plot_general_rolling_mean(df_music, df_ent, metric, rolling_window=4, log_sc
     plt.xticks(rotation=60)
     if log_scale: plt.yscale('log')
     plt.tight_layout()
+    data_utils.save_plot('general_rolling_mean', plt)
     plt.show()
 
 
@@ -458,6 +462,7 @@ def return_times_results_and_histograms(music_return_times, entertainment_return
     plt.ylabel('Number of Channels')
     plt.title('Histogram of Average Return Times')
     plt.legend()
+    data_utils.save_plot('hist_avg_return_times', plt)
     plt.show()
 
     # Plot histogram of return times for Music and Entertainment
@@ -473,6 +478,7 @@ def return_times_results_and_histograms(music_return_times, entertainment_return
     plt.ylabel('Number of Channels')
     plt.title('Histogram of Return Times')
     plt.legend()
+    data_utils.save_plot('hist_return_times', plt)
     plt.show()
 
     # Total number of peaks in Music and in Entertainment
@@ -921,6 +927,7 @@ def peak_heights_histogram(music_peaks, entertainment_peaks):
     plt.title('Histogram of Peak Heights Above Baseline - Log Scale')
     plt.xscale('log')
     plt.legend()
+    data_utils.save_plot('peak_heights_histogram', plt)
     plt.show()
 
 
@@ -1012,6 +1019,7 @@ def plot_time_series_one_channel(df_time_series_one_channel, metric, prom_percen
     plt.scatter(video_times, video_height, color='k', marker='+', linewidth=12, s=2, label='Published Video')
     plt.legend()
     plt.tight_layout()
+    data_utils.save_plot(f'{channel_name}_time_series', plt)
     plt.show()
 
 
