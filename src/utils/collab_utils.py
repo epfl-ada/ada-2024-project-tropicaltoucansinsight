@@ -286,43 +286,6 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     if save:
         data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Hist_Boxplot", plt, overwrite=True)
     plt.show()
-    #
-    # for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
-    #     sns.histplot(data=data, x=col, hue="collab", hue_order=[False, True], bins=80, common_norm=False,
-    #                  fill=True, stat="density", ax=ax[i], log_scale=x_log, legend=True)
-    #     ax[i].set_xlabel(custom_labels[col])
-    #     ax[i].set_ylabel("Normalized Number of Videos")
-    #     ax[i].set_title(f"Distribution of the {custom_labels[col]}\n for {category} Videos")
-    #     ax[i].legend(title="Collaboration", labels=["Yes", "No"])
-    #     if y_log:
-    #         ax[i].set_yscale("log")
-    # plt.tight_layout()
-    # if save:
-    #     data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Hist", plt, overwrite=True)
-    #
-    # plt.show()
-    #
-    # # Boxplot
-    # fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
-    # for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
-    #     sns.boxplot(
-    #         data=data, x="collab", hue="collab", y=col, ax=ax[i], legend=False, showmeans=True,
-    #         meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 20, 'markerfacecolor': 'red'},
-    #         showfliers=False  # comment this line to show the outliers
-    #     )
-    #     ax[i].set_xlabel("Collaboration")
-    #     ax[i].set_ylabel(custom_labels[col])
-    #     ax[i].set_title(f"Boxplot of the {custom_labels[col]}\n for {category} Videos")
-    #     ax[i].set_yscale("log")
-    #
-    # mean_marker = Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black', markersize=20,
-    #                      label='Means')
-    # fig.legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1, 0.9))
-    # plt.tight_layout()
-    # if save:
-    #     data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Boxplot", plt, overwrite=True)
-    #
-    # plt.show()
 
     # Complementary Cumulative Distribution Function (CCDF)
     fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
