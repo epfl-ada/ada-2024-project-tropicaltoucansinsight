@@ -1,14 +1,13 @@
 import streamlit as st
 import os
-from streamlit_pdf_viewer import pdf_viewer
 import io
 import pickle
 import base64
 
 # Define the folder paths
 STATIC_FOLDER = 'static'
-FIGURES_PDF = 'figures\pdf'
-FIGURES_PKL = 'figures\pickle'
+FIGURES_PDF = os.path.join('figures','pdf')
+FIGURES_PKL = os.path.join('figures','pickle')
 
 # Set page configuration
 st.set_page_config(
@@ -17,7 +16,7 @@ st.set_page_config(
 )
 
 def get_base64_encoded_image(image_path):
-    with open('figures\\Box_fight_Image.jpg', "rb") as img_file:
+    with open(os.path.join('static','intro.jpg'), "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
 # Load the local image and encode it
@@ -397,7 +396,102 @@ if selected_figure:
 
 st.markdown(""" ## Diversity Comparison Between Music and Entertainment""")
 
-st.markdown(""" Diversity results... """)
+"""Here we are, the final round of the greatest showdown of the century! As the tension peaks, the two contenders size each other up, daring, preparing for the ultimate clash. In one corner of the ring stands Entertainment, the unrivaled master of seasons, holidays, and global events. In the other, Music, backed by its loyal audience, blockbuster album releases, and powerful collaborations. Who will emerge victorious from this epic battle? Who will claim the coveted title of YouTube champion? The bets are placed, the predictions are in. One thing is certain: tonight, the story of the world's most popular video platform will be rewritten."""
+
+"""What better theme for the final showdown than exploring the diversity of content? Stepping out of one’s comfort zone is never easy, but the future often belongs to the bold. Before we dive into measuring diversity itself, let’s first take a closer look at the most common themes within our two heavyweight categories: Music and Entertainment."""
+
+"""To uncover the key domains of expertise for tonight's contenders, we dive into the titles and tags of their respective videos. That's where TF-IDF comes in, a somewhat intimidating name for a simple yet powerful method. It evaluates a word's importance in a text by considering how often it appears in that text and how rare it is across all texts. Using this approach, we pinpoint the most significant words. 
+The words from titles and tags are then transformed into numerical values, enabling us to leverage Machine Learning algorithms for clustering. Clustering organizes similar words into distinct groups. From there, we can associate each video with the group of similar words that best defines it, and identify the most significant word in the group as the video's primary theme."""
+
+"""When we visualize the themes of each category as word clouds, where the size of each word reflects its prominence, we get this delightful illustration:"""
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "wordcloud_music_vs_entertainment_general.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+"""But now, it’s time to quantify this diversity and crown the evening's ultimate champion—the suspense is unbearable! Now that we have identified the main themes for each category, we can calculate the average distance between them. The greater this distance, the more diverse the themes; the smaller it is, the less varied they are. 
+
+But here’s the burning question: how on earth do you calculate the distance between words? The answer is surprisingly straightforward! We map the words into a high-dimensional space using a pre-trained embedding model. Simple, right? 
+
+In essence, each word is assigned a vector, and we calculate the average distance between these vectors. This average distance becomes our measure of diversity—voilà! When we visualize the distribution of diversity scores for the top 10,000 videos in each category, this is what it looks like:"""
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "diversity_histogram.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+
+"""We notice that the distributions are quite similar, but Music shows a slightly higher average diversity. Yet, something feels off—we're not accounting for the timeline of the videos, i.e., how diversity evolves over time and which category ultimately crosses the finish line as the most diverse.""" 
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_days.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+
+"""When we examine diversity with fine granularity, day by day, we observe significant variance at the start for both categories, which gradually stabilizes over time. But what if we take a step back and adopt a broader perspective for a clearer picture?"""
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_months.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+
+"""Things are becoming clearer now—we see that both diversity curves follow an upward trend over time. This indicates that as time goes on, the content in both Music and Entertainment becomes increasingly varied. Fascinating insights! 
+
+However, it's still tricky to pinpoint the ultimate winner, as the two curves remain close to one another. Let’s step even further back and use years as our time window for a broader perspective."""
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_year.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+# Overall time evolution of delta_views
+fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_years_zoom.pkl")
+with open(fig1_path, "rb") as f:
+    fig1 = pickle.load(f)
+svg_buffer = io.StringIO()
+fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
+svg_buffer.seek(0)
+svg_data = svg_buffer.getvalue()
+svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
+st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=250, scrolling=True)
+
+"""And there it is—crystal clear! We can now see how the diversity scores of the two categories intertwined over time. At first, Entertainment held the lead, only to be overtaken by Music, which gained a comfortable advantage. But in a stunning turn of events, Entertainment, against all odds, made an incredible comeback, snatching the lead and finishing as the winner! 
+
+Unbelievable but true—Entertainment claims the diversity crown in this round, by a narrow margin! What an extraordinary finish!"""
+
 
 st.markdown(""" ## Conclusion """)
 
