@@ -69,12 +69,14 @@ def check_latex_availability():
         plt.rcParams['text.usetex'] = False
         
 
-def save_plot(file_name, _plt=plt):
+def save_plot(file_name, _plt=plt, overwrite=False):
     """
     Save the current matplotlib plot to a pickle file and a PDF file.
 
     Parameters:
     file_name (str): The base file name (without extension) for the output files.
+    _plt (plt): The matplotlib plot to save.
+    overwrite (bool): Whether to overwrite the files if they already exist.
 
     Output:
     - Creates a PDF file named <file_name>.pdf
@@ -86,7 +88,7 @@ def save_plot(file_name, _plt=plt):
 
     # Check for existing files and append '_x' if necessary
     counter = 1
-    while os.path.exists(pdf_file) or os.path.exists(pickle_file):
+    while not overwrite and (os.path.exists(pdf_file) or os.path.exists(pickle_file)):
         pdf_file = f"figures/pdf/{file_name}_{counter}.pdf"
         pickle_file = f"figures/pickle/{file_name}_{counter}.pkl"
         counter += 1
@@ -551,8 +553,8 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
         plt.figure(figsize=(8, 6))
         if (col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or
                 col == 'view_count' or col == 'dislike_count' or col == 'duration'):
-            sns.histplot(df[col], bins=100, log_scale=True)
-            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} Category", fontsize=25)
+            sns.histplot(df[col], bins=100, log_scale=True, color='#FF0000')
+            plt.title(f"Histogram of {custom_labels[col]} in the \n{category_name} category for YouTube {str_type}", fontsize=25)
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
 
@@ -560,11 +562,11 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
                 plt.yscale('log')
 
         else:
-            sns.histplot(df[col], bins=100)
+            sns.histplot(df[col], bins=100, color='#FF0000')
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
-            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} category", fontsize=25)
-        save_plot(f"hist_{type}_{col}")
+            plt.title(f"Histogram of {custom_labels[col]} in the \n{category_name} category for YouTube {str_type}", fontsize=25)
+        save_plot(f"hist_{type}_{col}_{category_name}", overwrite=True)
 
     plt.show()
 
@@ -572,10 +574,84 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
     plt.title(f"Correlation matrix of numerical columns \nin the {category_name} category", fontsize=25)
-    save_plot(f"hist_{type}_corr_matrix")
+    save_plot(f"corr_matrix_{type}_{category_name}", overwrite=True)
     plt.show()
 
     return stats
+
+
+def compare_categories(df1, df2, category1, category2, type):
+    """
+    Compares numerical attributes between two categories using histograms.
+
+    Args:
+        df1 (pd.DataFrame): Dataset containing the information of the first category.
+        df2 (pd.DataFrame): Dataset containing the information of the second category.
+        category1 (str): Name of the first category.
+        category2 (str): Name of the second category.
+        type (str): Type of data ("channel" or "video_metadata").
+    """
+
+    # Deep copy to not modify the initial data
+    df1 = df1.copy(deep=True)
+    df2 = df2.copy(deep=True)
+
+    # Extract the year and the month from the datetime column
+    if type == 'channel':
+        df1['year'] = df1['join_date'].dt.year
+        df2['year'] = df2['join_date'].dt.year
+        df1['month'] = df1['join_date'].dt.month
+        df2['month'] = df2['join_date'].dt.month
+    elif type == 'video_metadata':
+        df1['upload_year'] = df1['upload_date'].dt.year
+        df2['upload_year'] = df2['upload_date'].dt.year
+        df1['upload_month'] = df1['upload_date'].dt.month
+        df2['upload_month'] = df2['upload_date'].dt.month
+
+    # Plot histograms for numerical columns
+    numerical_columns = df1.select_dtypes(include=['integer', 'float']).columns
+
+    custom_labels = {
+        "videos_cc": "Number of Videos",
+        "subscribers_cc": "Number of Subscribers",
+        "like_count": "Number of Likes",
+        "view_count": "Number of Views",
+        "dislike_count": "Number of Dislikes",
+        "duration": "Duration",
+        "year": "Join Year",
+        "month": "Join Month",
+        "upload_year": "Upload Year",
+        "upload_month": "Upload Month",
+        "weights": "Weights",
+        "subscriber_rank_sb": "Subscriber Rank",
+        "join_date": "Join Date"
+    }
+
+    log_scale_columns = ["videos_cc", "subscribers_cc", "like_count", "view_count", "dislike_count", "duration"]
+
+    colors = sns.color_palette("tab10", 2)
+    for col in numerical_columns:
+        plt.figure(figsize=(8, 6))
+        if col in log_scale_columns:
+
+            sns.histplot(df1[col], bins=100, element="step", linewidth=2, 
+                        label=category1, alpha=0.2, fill=True, log_scale=True, color=colors[0])
+            sns.histplot(df2[col], bins=100, element="step", linewidth=2, 
+                        label=category2, alpha=0.2, fill=True, log_scale=True, color=colors[1])
+            if col == 'dislike_count':
+                plt.yscale("log")
+        else:
+            sns.histplot(df1[col], bins=100, element="step", linewidth=2, 
+                        label=category1, alpha=0.2, fill=True, color=colors[0])
+            sns.histplot(df2[col], bins=100, element="step", linewidth=2, 
+                        label=category2, alpha=0.2, fill=True, color=colors[1])
+        plt.xlabel(custom_labels.get(col, col), fontsize=20)
+        plt.ylabel("Count", fontsize=20)
+        plt.title(f"Comparison of {custom_labels.get(col, col)} between \n{category1} and {category2}", fontsize=20)
+        plt.legend(loc="best", fontsize=16)
+        plt.tight_layout()
+        save_plot(f"compare_{type}_{col}_{category1}_{category2}", overwrite=True)
+        plt.show()
 
 
 def save_chunk_grouped_by_col(df, column, output_dir="data/video_metadata"):
@@ -705,7 +781,7 @@ def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20")
 
     ax.set_title(title, fontsize=20, weight='bold', pad=16)
     ax.legend(wedges, legend_labels, title=custom_label[column], loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-    save_plot('pie_chart')
+    save_plot('pie_chart', overwrite=True)
     plt.show()
 
 
@@ -1045,4 +1121,5 @@ def plot_histogram_log_scale(df, column_name, title, xlabel, ylabel):
     plt.ylabel(ylabel, fontsize=20)
     save_plot(f'hist_{column_name}')
     plt.show()
+
 
