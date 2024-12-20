@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
+from . import data_utils
 
 
 def clean_and_categorize(df_time_series):
@@ -92,14 +93,16 @@ def metric_dataframe(df, n_weeks, metric='delta_views'):
     return result_df
 
 
-def plot_metric(df_music_metric_values, df_entertainment_metric_values, median=False):
+def plot_metric(df_music_metric_values, df_entertainment_metric_values, ax, first, median=False):
     """  
-    Plots the mean time evolution (with standard deviation) for Music and Entertainment dataframes given as arguments, 
+    Plots the mean time evolution (with standard deviation) on one Ax of a subplot for Music and Entertainment dataframes given as arguments, 
     for a given number of weeks.
     
     Args:
         - df_music_metric_values: Music DataFrame with values of Metric of interest
         - df_entertainment_metric_values: Entertainment with values of Metric of interest
+        - ax (plt.Axes): ax specifying the subplot
+        - first (boolean): specifies whether the ax is first in the row (column-wise)
         - median (boolean): if True plots the median for Music and Entertainment, if False doesn't plot
     
     Return: None (only plots)
@@ -113,30 +116,25 @@ def plot_metric(df_music_metric_values, df_entertainment_metric_values, median=F
 
     # Entertainment category mean and standard
     df_entertainment_applied = df_entertainment_metric_values.apply([np.mean, np.std, np.median], axis=0)
-    # TODO: Check that we can actually divide by square root of number of entries
     df_entertainment_applied.loc['std'] = df_entertainment_applied.loc['std'].multiply(1/np.sqrt(len(df_entertainment_metric_values)))
     entertainment1 = df_entertainment_applied.loc['mean'] + df_entertainment_applied.loc['std']
     entertainment2 = df_entertainment_applied.loc['mean'] - df_entertainment_applied.loc['std']
 
     # Plots
-    fig = plt.figure(figsize=(15, 7))
+    ax.plot(df_music_applied.columns, df_music_applied.loc['mean'], color='blue', label='Music Mean $\mu$')
+    ax.fill_between(df_music_applied.columns, y1=music1, y2=music2, alpha=0.5, label='Music $\mu\pm\sigma/\sqrt{N}$')
+    if median: ax.plot(df_music_applied.columns, df_music_applied.loc['median'], color='green', label='Music Median')
 
-    plt.plot(df_music_applied.columns, df_music_applied.loc['mean'], color='blue', label='Music Mean $\mu$')
-    plt.fill_between(df_music_applied.columns, y1=music1, y2=music2, alpha=0.5, label='Music $\mu\pm\sigma/\sqrt{N}$')
-    if median: plt.plot(df_music_applied.columns, df_music_applied.loc['median'], color='green', label='Music Median')
+    ax.plot(df_entertainment_applied.columns, df_entertainment_applied.loc['mean'], color='red', label='Entertainment Mean $\mu$')
+    ax.fill_between(df_entertainment_applied.columns, y1=entertainment1, y2=entertainment2, alpha=0.5, label='Entertainment $\mu\pm\sigma/\sqrt{N}$')
+    if median: ax.plot(df_music_applied.columns, df_entertainment_applied.loc['median'], color='k', label='Entertainment Median')
 
-    plt.plot(df_entertainment_applied.columns, df_entertainment_applied.loc['mean'], color='red', label='Entertainment Mean $\mu$')
-    plt.fill_between(df_entertainment_applied.columns, y1=entertainment1, y2=entertainment2, alpha=0.5, label='Entertainment $\mu\pm\sigma/\sqrt{N}$')
-    if median: plt.plot(df_music_applied.columns, df_entertainment_applied.loc['median'], color='k', label='Entertainment Median')
-
-    plt.title(f'Time Evolution of $\Delta$Views for {df_music_applied.columns[-1]} weeks')
-    plt.xlabel('# of Weeks')
-    plt.ylabel('$\Delta$Views')
-    plt.tick_params(axis='x', rotation=90)
-    plt.legend(loc='upper left', bbox_to_anchor=(1.01, 0.7))
-    plt.tight_layout()
-    plt.show()
-
+    ax.set_title(f'{df_music_applied.columns[-1]} Weeks', fontsize=20)
+    ax.set_xlabel('Weeks')
+    if first: ax.set_ylabel('$\Delta$Views')
+    ax.tick_params(axis='x', labelrotation=90)
+    ax.set_xticks(ax.get_xticks()[::int(np.ceil(int(df_music_applied.columns[-1])/12))])
+    ax.grid(alpha=0.5, linestyle=':')
 
 
 def calculate_metric_values_all_weeks(df_music, df_entertainment, weeks, metric):
@@ -161,20 +159,35 @@ def calculate_metric_values_all_weeks(df_music, df_entertainment, weeks, metric)
 
 
 
-def plot_metric_values_all_weeks(df_metric_list, median=False):
+def plot_metric_values_all_weeks(df_metric_list, col_number=4, median=False, save_title='Metric Values Subplots'):
     """
     Using plot_metric, plots the evolution of the metric for all number of weeks contained in the list of DataFrames in the input.
     The input is first calculated with calculate_metric_values_all_weeks.
 
     Args:
         - df_metric_list (list): 2-dimensional list where each row contains the Music and Entertainment DataFrames for a given number of weeks
-        - median (boolean): argument of plot_metric that decides if the median is plotted or not
-    
+        - col_number (int): Number of columns of the subplot (default 4)
+        - median (boolean): argument of plot_metric that decides if the median is plotted or not (defaulf False)
+        - save_title (string): Title to save the figure in figures folder
+
     Return: None
     """
+    # Create Subplots
+    rows = int(np.ceil(len(df_metric_list)/col_number))
+    fig, axes = plt.subplots(rows, col_number, figsize=(15, 10), sharex=False, sharey=True)
 
+    # Plot all subplots
     for i in range(len(df_metric_list)):
-        plot_metric(df_metric_list[i][0], df_metric_list[i][1], median=median)
+        row = i //4
+        col = i % 4
+
+        plot_metric(df_metric_list[i][0], df_metric_list[i][1], ax=axes[row, col], first=(col==0), median=median)
+    
+    plt.suptitle ('Time Evolution of $\Delta$ Views', fontsize=40, y=1.1)
+    plt.legend(loc='upper left', bbox_to_anchor=(-3, -0.25), ncol=2)
+    plt.subplots_adjust(top = 0.99, bottom=0.01, hspace=0.3, wspace=0.1)
+    data_utils.save_plot(file_name=save_title, overwrite=True)
+    plt.show()
 
 
 
