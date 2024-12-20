@@ -1,16 +1,19 @@
 """
 data_utils.py
 
-These might include helper functions for data transformations, cleaning, augmentations, or any operations used
+Include helper functions for data transformations, cleaning, augmentations, or any operations used
 repeatedly within the dataloading process.
 """
-
+import re
 import os
 import requests
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from collections import defaultdict
+import pickle
 
 
 def get_data(datasets, target_dir="data"):
@@ -45,6 +48,57 @@ def get_data(datasets, target_dir="data"):
 
         else:
             print(f"{file_name} already exists in '{target_dir}'.")
+
+
+def check_latex_availability():
+    """
+    Checks if LaTeX is available in the current environment.
+
+    Returns:
+        bool: True if LaTeX is available, False otherwise.
+    """
+    try:
+        plt.rcParams['text.usetex'] = True
+        plt.text(0, 0, "Test", fontsize=12)
+        plt.close()
+        return True
+    except Exception as e:
+        print("LaTeX is not available. Error:", e)
+        return False
+    finally:
+        plt.rcParams['text.usetex'] = False
+        
+
+def save_plot(file_name, _plt=plt, overwrite=False):
+    """
+    Save the current matplotlib plot to a pickle file and a PDF file.
+
+    Parameters:
+    file_name (str): The base file name (without extension) for the output files.
+    _plt (plt): The matplotlib plot to save.
+    overwrite (bool): Whether to overwrite the files if they already exist.
+
+    Output:
+    - Creates a PDF file named <file_name>.pdf
+    - Creates a pickle file named <file_name>.pkl
+    """
+    # Initial paths
+    pdf_file = f"figures/pdf/{file_name}.pdf"
+    pickle_file = f"figures/pickle/{file_name}.pkl"
+
+    # Check for existing files and append '_x' if necessary
+    counter = 1
+    while not overwrite and (os.path.exists(pdf_file) or os.path.exists(pickle_file)):
+        pdf_file = f"figures/pdf/{file_name}_{counter}.pdf"
+        pickle_file = f"figures/pickle/{file_name}_{counter}.pkl"
+        counter += 1
+
+    # Save to PDF
+    _plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
+
+    # Save to pickle
+    with open(pickle_file, 'wb') as f:
+        pickle.dump(_plt.gcf(), f)
 
 
 def save_data_grouped_by_category(df, column, output_dir, overwrite=False, verbose=True):
@@ -150,6 +204,7 @@ def plot_channel_time_series(df, channel_name, datetime_col, quantities_to_plot,
     plt.grid(True, alpha=0.5)
     plt.xlim(df[datetime_col].min(), df[datetime_col].max())
     plt.xticks(rotation=60)
+    save_plot(f'channel_time_series{channel_name}')
     plt.show()
 
 
@@ -177,6 +232,8 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
         "view_count":"Number of Views",
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
+        "collaborations_count": "Number of Collaborations",
+        "colab_ratio": "Collaboration Ratio",
     }
 
     fig, axs = plt.subplots(len(columns), 1, figsize=(8, 6 * len(columns)))
@@ -217,6 +274,7 @@ def plot_category_distribution(df_data, columns, category, x_logs, y_logs, kind=
             axs[i].set_yscale('log')
 
     plt.tight_layout()
+    save_plot(f'category_distribution_{category}')
     plt.show()
 
     # Print summary statistics if required
@@ -229,7 +287,7 @@ def upper_case_first_letter(s):
     return s[0].upper() + s[1:]
 
 
-def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False, density=False):
+def compare_distribution_across_categories(df_data, columns, categories, x_logs, y_logs, kind="hist", hue='category', marker_only=False, density=False, showmeans=True):
     """
     Plot the distribution of the columns for the given categories.
 
@@ -247,7 +305,13 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
     # TODO: set the same color palette as the pie chart
 
     # Filter for the selected categories
-    df = df_data[df_data[hue].isin(categories)].copy()
+    if "True" or "False" in categories:
+        # convert string to boolean
+        categories_bool = [True if cat == "True" else False for cat in categories]
+        df = df_data[df_data[hue].isin(categories_bool)].copy()
+    else:
+        df = df_data[df_data[hue].isin(categories)].copy()
+
     df = df.rename(columns={hue: upper_case_first_letter(hue)})
     hue = upper_case_first_letter(hue)
 
@@ -267,6 +331,8 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
         "view_count":"Number of Views",
         "like_count":"Number of Likes",
         "dislike_count":"Number of Dislikes",
+        "collaborations_count": "Number of Collaborations",
+        "colab_ratio": "Collaboration Ratio",
     }
 
     # If there's only one column, axs is not a list, so we make it iterable
@@ -283,7 +349,7 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
             if y_log:
                 kde = False
             if marker_only:
-                markers = ['o', 's', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_']
+                markers = ['o', '.', '^', 'd', 'v', '<', '>', 'p', 'P', '*', 'h', 'H', '+', '|', '_', 's']
                 if x_log:
                     bins = np.geomspace(df[col].min(), df[col].max(), 80)
                 else:
@@ -303,32 +369,54 @@ def compare_distribution_across_categories(df_data, columns, categories, x_logs,
                 stat = 'density' if density else 'count'
                 sns.histplot(data=df, x=col, hue=hue, bins=100, kde=kde, ax=axs[i], alpha=0.3, log_scale=x_log, stat=stat, common_norm=False)
 
+            if density:
+                axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Density", fontsize=16)
+            else:
+                axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Count", fontsize=16)
+            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "violin":
-            sns.violinplot(data=df, x=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.violinplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            axs[i].set_title(f"Violin plot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "boxplot":
-            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.boxplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log,
+                        showmeans=showmeans, meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 8, 'markerfacecolor': 'red'})
+            axs[i].set_title(f"Boxplot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
+            if showmeans:
+                mean_marker = Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black', markersize=10, label='Means')
+                axs[i].legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1.05, 1))
+
         elif kind == "kde":
-            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            sns.kdeplot(data=df, x=col, hue=hue, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log, common_norm=False)
+            if density:
+                axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Density", fontsize=16)
+            else:
+                axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+                axs[i].set_ylabel("Count", fontsize=16)
+            axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
+
         elif kind == "boxenplot":
             sns.boxenplot(data=df, x=hue, hue=hue, y=col, ax=axs[i], label=custom_labels.get(col, col), log_scale=x_log)
+            axs[i].set_title(f"Boxplot of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
+            axs[i].set_ylabel(fr"{custom_labels[col]}", fontsize=16)
+
         else:
             raise ValueError("Invalid plot kind. Choose from {'violin', 'hist', 'boxplot', 'kde', 'boxenplot'}")
-
-        # Set titles and labels
-        if density:
-            axs[i].set_title(f"Density of {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
-            axs[i].set_ylabel("Density", fontsize=16)
-        else:
-            axs[i].set_title(f"Distribution of Number of Entries per {custom_labels[col]} across\n {', '.join(categories)}", fontsize=20)
-            axs[i].set_ylabel("Count", fontsize=16)
-
-        axs[i].set_xlabel(fr"{custom_labels[col]}", fontsize=16)
 
         # Apply y-axis log scale if specified
         if y_log:
             axs[i].set_yscale('log')
 
+    plt.grid(True, alpha=0.35)
     plt.tight_layout()
+    save_plot('compare_distribution_across_categories')
     plt.show()
 
 
@@ -465,21 +553,20 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
         plt.figure(figsize=(8, 6))
         if (col == 'videos_cc' or col == 'subscribers_cc' or col == 'like_count' or
                 col == 'view_count' or col == 'dislike_count' or col == 'duration'):
-            sns.histplot(df[col], bins=100, log_scale=True)
-            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} Category", fontsize=25)
+            sns.histplot(df[col], bins=100, log_scale=True, color='#FF0000')
+            plt.title(f"Histogram of {custom_labels[col]} in the \n{category_name} category for YouTube {str_type}", fontsize=25)
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
 
-            if col == 'dislike_count':  # TODO: voir si on garde plus tard ou pas
+            if col == 'dislike_count':
                 plt.yscale('log')
 
         else:
-            sns.histplot(df[col], bins=100)
+            sns.histplot(df[col], bins=100, color='#FF0000')
             plt.xlabel(f"{custom_labels[col]}", fontsize=20)
             plt.ylabel("Count", fontsize=20)
-            plt.title(f"Histogram of Number of {str_type} per \n {custom_labels[col]} in the {category_name} category", fontsize=25)
-
-
+            plt.title(f"Histogram of {custom_labels[col]} in the \n{category_name} category for YouTube {str_type}", fontsize=25)
+        save_plot(f"hist_{type}_{col}_{category_name}", overwrite=True)
 
     plt.show()
 
@@ -487,9 +574,84 @@ def get_stats_on_category(df, type, category_name, corr_method='spearman', verbo
     corr_matrix = df[numerical_columns].corr(method=corr_method)
     sns.heatmap(corr_matrix, annot=True)
     plt.title(f"Correlation matrix of numerical columns \nin the {category_name} category", fontsize=25)
+    save_plot(f"corr_matrix_{type}_{category_name}", overwrite=True)
     plt.show()
 
     return stats
+
+
+def compare_categories(df1, df2, category1, category2, type):
+    """
+    Compares numerical attributes between two categories using histograms.
+
+    Args:
+        df1 (pd.DataFrame): Dataset containing the information of the first category.
+        df2 (pd.DataFrame): Dataset containing the information of the second category.
+        category1 (str): Name of the first category.
+        category2 (str): Name of the second category.
+        type (str): Type of data ("channel" or "video_metadata").
+    """
+
+    # Deep copy to not modify the initial data
+    df1 = df1.copy(deep=True)
+    df2 = df2.copy(deep=True)
+
+    # Extract the year and the month from the datetime column
+    if type == 'channel':
+        df1['year'] = df1['join_date'].dt.year
+        df2['year'] = df2['join_date'].dt.year
+        df1['month'] = df1['join_date'].dt.month
+        df2['month'] = df2['join_date'].dt.month
+    elif type == 'video_metadata':
+        df1['upload_year'] = df1['upload_date'].dt.year
+        df2['upload_year'] = df2['upload_date'].dt.year
+        df1['upload_month'] = df1['upload_date'].dt.month
+        df2['upload_month'] = df2['upload_date'].dt.month
+
+    # Plot histograms for numerical columns
+    numerical_columns = df1.select_dtypes(include=['integer', 'float']).columns
+
+    custom_labels = {
+        "videos_cc": "Number of Videos",
+        "subscribers_cc": "Number of Subscribers",
+        "like_count": "Number of Likes",
+        "view_count": "Number of Views",
+        "dislike_count": "Number of Dislikes",
+        "duration": "Duration",
+        "year": "Join Year",
+        "month": "Join Month",
+        "upload_year": "Upload Year",
+        "upload_month": "Upload Month",
+        "weights": "Weights",
+        "subscriber_rank_sb": "Subscriber Rank",
+        "join_date": "Join Date"
+    }
+
+    log_scale_columns = ["videos_cc", "subscribers_cc", "like_count", "view_count", "dislike_count", "duration"]
+
+    colors = sns.color_palette("tab10", 2)
+    for col in numerical_columns:
+        plt.figure(figsize=(8, 6))
+        if col in log_scale_columns:
+
+            sns.histplot(df1[col], bins=100, element="step", linewidth=2, 
+                        label=category1, alpha=0.2, fill=True, log_scale=True, color=colors[0])
+            sns.histplot(df2[col], bins=100, element="step", linewidth=2, 
+                        label=category2, alpha=0.2, fill=True, log_scale=True, color=colors[1])
+            if col == 'dislike_count':
+                plt.yscale("log")
+        else:
+            sns.histplot(df1[col], bins=100, element="step", linewidth=2, 
+                        label=category1, alpha=0.2, fill=True, color=colors[0])
+            sns.histplot(df2[col], bins=100, element="step", linewidth=2, 
+                        label=category2, alpha=0.2, fill=True, color=colors[1])
+        plt.xlabel(custom_labels.get(col, col), fontsize=20)
+        plt.ylabel("Count", fontsize=20)
+        plt.title(f"Comparison of {custom_labels.get(col, col)} between \n{category1} and {category2}", fontsize=20)
+        plt.legend(loc="best", fontsize=16)
+        plt.tight_layout()
+        save_plot(f"compare_{type}_{col}_{category1}_{category2}", overwrite=True)
+        plt.show()
 
 
 def save_chunk_grouped_by_col(df, column, output_dir="data/video_metadata"):
@@ -522,9 +684,9 @@ def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size
     Process a large JSONL file by reading it in chunks, grouping the data by a specified column, and saving each group to a separate Parquet file.
 
     Args:
-        data_filename (str): Path to the data file.
-        chunk_size (int): The number of rows to read in each chunk.
-        column_to_group (str): The column to group the data by.
+        data_filename (str): Path to the data file
+        chunk_size (int): The number of rows to read in each chunk
+        column_to_group (str): The column to group the data by
     """
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
         for chunk in reader:
@@ -542,11 +704,11 @@ def process_metadata(data_filename, output_dir='data/video_metadata', chunk_size
 
 def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000):
     """
-    Convert a JSONL file to Parquet format.
+    Convert a JSONL file to Parquet format
 
     Args:
-        data_filename (str): Path to the JSONL file.
-        output_filename (str): Path to the output Parquet file.
+        data_filename (str): Path to the JSONL file
+        output_filename (str): Path to the output Parquet file
     """
     dfs = []
     with pd.read_json(data_filename, lines=True, compression='gzip', chunksize=chunk_size) as reader:
@@ -558,13 +720,13 @@ def convert_jsonl_to_parquet(data_filename, output_filename, chunk_size=100_000)
 
 def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20"):
     """
-    Plot a pie chart for the specified column in the DataFrame.
+    Plot a pie chart for the specified column in the DataFrame
 
     Args:
-        df (pd.DataFrame): The DataFrame containing the data.
-        column (str): The column to plot.
-        title (str): The title of the pie chart.
-        values (str): The column containing the values to sum for each category.
+        df (pd.DataFrame): The DataFrame containing the data
+        column (str): The column to plot
+        title (str): The title of the pie chart
+        values (str): The column containing the values to sum for each category
         threshold (int): The threshold percentage for displaying the labels outside the pie chart
     """
     custom_label = {
@@ -619,17 +781,345 @@ def plot_pie_chart(df, column, title, values=None, threshold=3, palette="tab20")
 
     ax.set_title(title, fontsize=20, weight='bold', pad=16)
     ax.legend(wedges, legend_labels, title=custom_label[column], loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+    save_plot('pie_chart', overwrite=True)
     plt.show()
 
 
 def geometric_mean(data):
     """
-    Compute the geometric mean of a list of values.
+    Compute the geometric mean of a list of values
 
     Args:
-        data (df.Series): List of values.
+        data (df.Series): List of values
 
     Returns:
-        float: Geometric mean of the values.
+        float: Geometric mean of the values
     """
     return np.exp(np.mean(np.log(data + 1)))
+
+
+def detect_collaboration(text, collaboration_patterns=None):
+    """
+    Detect if the text indicates a collaboration
+
+    Args:
+        text (str): Text to analyze
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+
+    Returns:
+        bool: True if collaboration is detected, False otherwise
+    """
+    # Default collaboration patterns
+    if collaboration_patterns is None:
+        collaboration_patterns = [r'\bfeat\b', r'\bft\b', r'\bfeaturing\b', r'\bx\b', r'\bw/\b', r'\bft\.\b']
+
+    # Combine patterns into a single regex pattern
+    pattern = re.compile('|'.join(collaboration_patterns), flags=re.IGNORECASE)
+
+    return bool(pattern.search(text))
+
+
+def detect_non_collaboration(text, collaboration_patterns=None):
+    """
+    Detect if the text does NOT indicate a collaboration
+
+    Args:
+        text (str): Text to analyze
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+
+    Returns:
+        bool: True if no collaboration is detected, False otherwise
+    """
+    return not detect_collaboration(text, collaboration_patterns)
+
+
+def preprocess_non_collaborations(chunk_df):
+    return preprocess_collaborations(chunk_df, collaboration_patterns=None, non_collaborations_only=True)
+
+
+def preprocess_collaborations(chunk_df, collaboration_patterns=None, non_collaborations_only=False):
+    """
+    Preprocess a chunk of data
+
+    Args:
+        chunk_df (pd.DataFrame): Chunk of data
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+        non_collaborations_only (bool): Whether to keep only rows where the title does not indicate a collaboration
+
+    Returns:
+        pd.DataFrame: Processed data
+    """
+    # Drop rows with missing values
+    chunk_df = chunk_df.dropna(how='any')
+
+    # Only keep Music and Entertainment categories with selected columns
+    chunk_df = chunk_df[chunk_df['categories'].isin(['Music','Entertainment'])]
+    columns_to_keep = ['categories', 'title', 'description', 'tags', 'view_count',
+                       'like_count', 'dislike_count', 'channel_id', 'upload_date']
+    chunk_df = chunk_df[columns_to_keep]
+
+    if non_collaborations_only:
+        # Only keep rows where the title does not indicate a collaboration
+        chunk_df = chunk_df[chunk_df['title'].apply(detect_non_collaboration)]
+    else:
+        # Only keep rows where the title indicates a collaboration
+        chunk_df = chunk_df[chunk_df['title'].apply(detect_collaboration)]
+
+    return chunk_df
+
+
+def filter_categories(chunk_df, categories=None):
+    """
+    Filter the data by categories
+
+    Args:
+        chunk_df (pd.DataFrame): Chunk of data
+        categories (list): List of categories to keep
+
+    Returns:
+        pd.DataFrame: Filtered data
+    """
+    chunk_df.dropna()
+    if categories is None:
+        categories = ['Music', 'Entertainment']
+    return chunk_df[chunk_df['categories'].isin(categories)]
+
+
+def process_data(file_path, chunk_size, preprocess_func, output_path, collaboration_patterns=None):
+    """
+    Process a JSONL file in chunks and apply a preprocessing function to each chunk
+
+    Args:
+        file_path (str): Path to the gzipped JSONL file
+        chunk_size (int): Number of rows to process per chunk
+        preprocess_func (callable): Function to apply to each chunk of data (Pandas DataFrame)
+        output_path (str): Path to store the processed data
+        collaboration_patterns (list): List of regex patterns to detect collaborations
+
+    Returns:
+        None
+    """
+    # Check if output_path is a directory
+    is_directory = not output_path.endswith(".jsonl.gz")
+
+    if is_directory:
+        os.makedirs(output_path, exist_ok=True)
+
+    with pd.read_json(file_path, lines=True, compression="gzip", chunksize=chunk_size) as reader:
+        for i, chunk_df in enumerate(reader):
+            print(f"Processing chunk {i + 1}...")
+
+            # Apply preprocessing function to the chunk
+            processed_df = preprocess_func(chunk_df)
+
+            if is_directory:
+                # Save to separate files for each category
+                processed_df_grouped = processed_df.groupby('categories')
+                for category, df_group in processed_df_grouped:
+                    category_output_path = os.path.join(output_path, f"{category}.jsonl.gz")
+                    print(f"Saving {len(df_group)} rows to {category_output_path}")
+                    df_group.to_json(category_output_path, orient="records", lines=True,
+                                     force_ascii=False, compression='gzip', mode='a')
+            else:
+                # Save to a single output file
+                print(f"Saving chunk to {output_path}")
+                processed_df.to_json(output_path, orient="records", lines=True,
+                                     force_ascii=False, compression='gzip', mode='a')
+
+
+def process_video_counts(data_file, chunk_size, output_path='data/video_counts.jsonl.gz'):
+    """
+    Process a JSONL file containing video data to count the number of videos per channel
+
+    Args:
+        data_file (str): Path to the gzipped JSONL file
+        chunk_size (int): Number of rows to process per chunk
+        output_path (str): Path to store the processed data
+
+    Returns:
+        None
+    """
+    # Initialize a defaultdict to store the video counts per channel
+    video_counts = defaultdict(int)
+
+    # Process the data in chunks
+    for i, chunk in enumerate(pd.read_json(data_file, chunksize=chunk_size, dtype={'channel_id': 'str'}, lines=True, compression='gzip')):
+        counts = chunk['channel_id'].value_counts()
+        for creator_id, count in counts.items():
+            video_counts[creator_id] += count
+
+    # Create a DataFrame from the video counts
+    df_counts = pd.DataFrame(list(video_counts.items()), columns=['channel_id', 'video_count'])
+
+    # Save the results to a compressed JSONL file
+    print("Sauvegarde des résultats dans le fichier JSONL compressé...")
+    df_counts.to_json(
+        path_or_buf=output_path,
+        orient='records',
+        lines=True,
+        compression='gzip',
+        force_ascii=False
+    )
+
+
+def filter_by_channels(chunk_df, channel_ids):
+    return chunk_df[chunk_df['channel_id'].isin(channel_ids)]
+
+
+def process_by_collaboration_ranges(df, input_path, chunk_size=100_000, verbose=False):
+    """
+    Process the data by collaboration ratio ranges
+
+    Args:
+        df (pandas.DataFrame): DataFrame containing the collaboration ratio ranges
+        input_path (str): Path to the gzipped JSONL file to process
+        chunk_size (int): Number of rows to process per chunk
+        verbose (bool): Whether to display progress information
+    """
+    # Group df by the collaboration ratio range
+    df_grouped = df.groupby('colab_range', observed=False)
+
+    # Iterate over the groups
+    for bin, df_bin in sorted(df_grouped, key=lambda x: x[0].left, reverse=True):
+        if verbose:
+            print(f"- Processing data for collaboration range: {bin}")
+
+        channels = df_bin['channel_id'].unique()
+        bin_name = f"{bin.left:.3f}_{bin.right:.3f}"
+        output_path = f"data/collab_ratio_ranges/collaborations_{bin_name}.jsonl.gz"
+        process_data(input_path,
+                     chunk_size=chunk_size,
+                     preprocess_func=lambda chunk_df: filter_by_channels(chunk_df, channels),
+                     output_path=output_path)
+
+        if verbose:
+            print(f"    --> Finished processing for collaboration range: {bin}")
+
+
+def get_upload_evolution(df_music, df_entertainment, period=None, cumulative=True):
+    """
+    Plot the evolution of video uploads for "Music" and "Entertainment" categories over time
+
+    Args:
+        df_music (pandas.DataFrame): DataFrame containing upload dates for the "Music" category.
+        df_entertainment (pandas.DataFrame): DataFrame containing upload dates for the "Entertainment" category.
+        period (str, optional): Time period for aggregating uploads. Valid values are:
+            - 'Y': Yearly
+            - 'M': Monthly
+            - 'W': Weekly
+            - 'D': Daily
+            If None, the function plots cumulative uploads over time
+        cumulative (bool, optional): Whether to plot cumulative uploads over time. Ignored if `period` is provided
+    """
+
+    # Create a DataFrame with sorted upload dates for each category
+    df_music_upload = pd.DataFrame(pd.to_datetime(df_music["upload_date"].copy()).sort_values(), columns=["upload_date"])
+    df_music_upload["cumulative"] = range(1, len(df_music_upload) + 1)
+    df_entertainment_upload = pd.DataFrame(pd.to_datetime(df_entertainment["upload_date"].copy()).sort_values(), columns=["upload_date"])
+    df_entertainment_upload["cumulative"] = range(1, len(df_entertainment_upload) + 1)
+
+    # If no period is given, plot the cumulative evolution
+    if period == None and cumulative:
+        x_min = df_entertainment_upload["upload_date"].min() if (df_entertainment_upload["upload_date"].min()
+                                                                 < df_music_upload["upload_date"].min()) else df_music_upload["upload_date"].min()
+        x_max = pd.Timestamp("2019-10")
+
+        # Comparison between the 2 categories
+        plt.figure(figsize=(20, 8))
+        plt.plot(df_music_upload["upload_date"], df_music_upload["cumulative"], label="Music")
+        plt.plot(df_entertainment_upload["upload_date"], df_entertainment_upload["cumulative"], label="Entertainment")
+        plt.xlim(x_min, x_max)
+        plt.xlabel("Upload Date")
+        plt.ylabel("Cumulative Number of Uploads")
+        plt.title("Cumulative Growth of Collaborative Video Uploads")
+        plt.legend(fontsize=25)
+        plt.grid(True, alpha=0.3)
+        plt.show()
+    else:
+        valid_periods = {"Y", "M", "W", "D"}
+        if period not in valid_periods:
+            raise ValueError(f"Invalid period. Expected one of {valid_periods}, got '{period}' instead.")
+
+        # Music
+        df_music_period = df_music_upload.groupby(df_music_upload['upload_date'].dt.to_period(period)).size().reset_index(name='uploads')
+        df_music_period["upload_date"] = df_music_period["upload_date"].dt.to_timestamp()
+
+        # Entertainment
+        df_entertainment_period = df_entertainment_upload.groupby(df_entertainment_upload['upload_date'].dt.to_period(period)).size().reset_index(name='uploads')
+        df_entertainment_period["upload_date"] = df_entertainment_period["upload_date"].dt.to_timestamp()
+
+        # Computing limits for the plot
+        x_min = min(df_music_period["upload_date"].min(), df_entertainment_period["upload_date"].min())
+        x_max = pd.Timestamp("2019-09")
+
+        # Comparison between the two categories
+        plt.figure(figsize=(20, 8))
+        sns.lineplot(x='upload_date', y='uploads', data=df_music_period, label="Music")
+        sns.lineplot(x='upload_date', y='uploads', data=df_entertainment_period, label="Entertainment")
+        plt.xlim(x_min, x_max)
+        period_label = {"M": "Month", "D": "Day", "Y": "Year", "W": "Week"}
+        plt.xlabel(f"Upload Date ({period_label[period]})")
+        plt.ylabel(f"Number of Uploads per {period_label[period]}")
+        plt.title(f"Trend of Collaborative Video Uploads by {period_label[period]}")
+        plt.legend(fontsize=25)
+        plt.grid(True, alpha=0.3)
+        plt.show()
+
+
+def plot_collaboration_stats(stats_music, stats_entertainment, metrics, titles, ylabel, figsize=(40, 10), ylog=None):
+    """
+    Plots bar charts for a given set of metrics and their corresponding titles
+
+    Args:
+        stats_music (pandas.DataFrame): DataFrame for the "Music" category
+        stats_entertainment (pandas.DataFrame): DataFrame for the "Entertainment" category
+        metrics (list of tuples): List of tuples, each containing two column names (music_metric, entertainment_metric)
+        titles (list of str): List of titles for each subplot
+        ylabel (list of str): List of y-axis labels for each subplot
+        figsize (tuple): Tuple, the size of the figure
+        ylog (list of bool): List of booleans, if True sets log scale on the corresponding plot
+    """
+    num_metrics = len(metrics)
+    if ylog is None:
+        ylog = [False] * num_metrics
+
+    _, ax = plt.subplots(1, num_metrics, figsize=figsize, sharex=True)
+
+    for i, ((music_metric, entertainment_metric), title, y_label, log_scale) in enumerate(zip(metrics, titles, ylabel, ylog)):
+        sns.barplot(x=stats_music["colab_range"], y=stats_music[music_metric],
+                    alpha=0.6, label="Music", width=0.7, ax=ax[i])
+        sns.barplot(x=stats_entertainment["colab_range"], y=stats_entertainment[entertainment_metric],
+                    alpha=0.6, label="Entertainment", width=0.7, ax=ax[i])
+        ax[i].set_title(title, fontsize=30)
+        ax[i].set_ylabel(y_label)
+        if log_scale:
+            ax[i].set_yscale('log')
+
+    for a in ax:
+        a.set_xlabel("Collaboration Ratio Range")
+        a.tick_params(axis='x', rotation=90)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_histogram_log_scale(df, column_name, title, xlabel, ylabel):
+    """
+    Plot a histogram with a logarithmic scale for both axes.
+
+    Parameters:
+    df (pd.DataFrame): The DataFrame containing the data.
+    column_name (str): The column to plot the histogram for.
+    title (str): The title of the histogram.
+    xlabel (str): The label for the x-axis.
+    ylabel (str): The label for the y-axis.
+    """
+    sns.histplot(df[column_name], bins=100, log_scale=True)
+    plt.yscale('log')
+    plt.title(title, fontsize=25)
+    plt.xlabel(xlabel, fontsize=20)
+    plt.ylabel(ylabel, fontsize=20)
+    save_plot(f'hist_{column_name}')
+    plt.show()
+
+
