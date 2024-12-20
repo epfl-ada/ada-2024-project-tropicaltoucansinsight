@@ -92,7 +92,7 @@ def metric_dataframe(df, n_weeks, metric='delta_views'):
     return result_df
 
 
-def plot_metric(df_music_metric_values, df_entertainment_metric_values):
+def plot_metric(df_music_metric_values, df_entertainment_metric_values, median=False):
     """  
     Plots the mean time evolution (with standard deviation) for Music and Entertainment dataframes given as arguments, 
     for a given number of weeks.
@@ -100,6 +100,7 @@ def plot_metric(df_music_metric_values, df_entertainment_metric_values):
     Args:
         - df_music_metric_values: Music DataFrame with values of Metric of interest
         - df_entertainment_metric_values: Entertainment with values of Metric of interest
+        - median (boolean): if True plots the median for Music and Entertainment, if False doesn't plot
     
     Return: None (only plots)
     """
@@ -122,17 +123,17 @@ def plot_metric(df_music_metric_values, df_entertainment_metric_values):
 
     plt.plot(df_music_applied.columns, df_music_applied.loc['mean'], color='blue', label='Music Mean $\mu$')
     plt.fill_between(df_music_applied.columns, y1=music1, y2=music2, alpha=0.5, label='Music $\mu\pm\sigma/\sqrt{N}$')
-    plt.plot(df_music_applied.columns, df_music_applied.loc['median'], color='green', label='Music Median')
+    if median: plt.plot(df_music_applied.columns, df_music_applied.loc['median'], color='green', label='Music Median')
 
     plt.plot(df_entertainment_applied.columns, df_entertainment_applied.loc['mean'], color='red', label='Entertainment Mean $\mu$')
     plt.fill_between(df_entertainment_applied.columns, y1=entertainment1, y2=entertainment2, alpha=0.5, label='Entertainment $\mu\pm\sigma/\sqrt{N}$')
-    plt.plot(df_music_applied.columns, df_entertainment_applied.loc['median'], color='k', label='Entertainment Median')
+    if median: plt.plot(df_music_applied.columns, df_entertainment_applied.loc['median'], color='k', label='Entertainment Median')
 
     plt.title(f'Time Evolution of $\Delta$Views for {df_music_applied.columns[-1]} weeks')
     plt.xlabel('# of Weeks')
     plt.ylabel('$\Delta$Views')
     plt.tick_params(axis='x', rotation=90)
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper left', bbox_to_anchor=(1.01, 0.7))
     plt.tight_layout()
     plt.show()
 
@@ -158,96 +159,22 @@ def calculate_metric_values_all_weeks(df_music, df_entertainment, weeks, metric)
 
     return df_metric_list
 
-def plot_metric_values_all_weeks(df_metric_list):
+
+
+def plot_metric_values_all_weeks(df_metric_list, median=False):
     """
     Using plot_metric, plots the evolution of the metric for all number of weeks contained in the list of DataFrames in the input.
     The input is first calculated with calculate_metric_values_all_weeks.
 
     Args:
         - df_metric_list (list): 2-dimensional list where each row contains the Music and Entertainment DataFrames for a given number of weeks
+        - median (boolean): argument of plot_metric that decides if the median is plotted or not
     
     Return: None
     """
 
     for i in range(len(df_metric_list)):
-        plot_metric(df_metric_list[i][0], df_metric_list[i][1])
-
-
-
-def relative_metric_dataframe(df, n_weeks, weeks_average, metric='delta_views'):
-    """
-    Extract relative delta_views from a time-series DataFrame.
-    Relative delta_views are computed as the delta_views normalized by the 
-    average delta_views over the 4 weeks prior to video publication.
-
-    Args:
-        - df (pd.DataFrame): Time-series DataFrame with columns 'channel', 'delta_videos', and 'delta_views'.
-        - n_weeks (int): Number of weeks to collect relative delta_views.
-        - weeks_average (int): Number of weeks before video upload over which to compute metric average
-        - metric (str): quantity of interest for which the DataFrame is created. Default is 'delta_views', but could also be delta_subs for example.
-        
-    Returns:
-        pd.DataFrame: DataFrame containing relative delta_views for valid timeframes.
-    """
-    df_one_new_video = df[df['delta_videos'] == 1]
-    print(f"Number of initial video entries for n_weeks = {n_weeks}: {len(df_one_new_video)}")
-
-    # Group data by 'channel' to avoid repetitive filtering
-    grouped_by_channel = df.groupby('channel')
-
-    # Pre-allocate results
-    results = []
-
-    for start_index in df_one_new_video.index:
-        # Get relevant group and locate the start position
-        channel_id = df.at[start_index, 'channel']
-        channel_data = grouped_by_channel.get_group(channel_id)
-        start_pos = channel_data.index.get_loc(start_index)
-
-        # Ensure there are enough preceding weeks and succeeding weeks
-        if start_pos >= weeks_average and start_pos + n_weeks < len(channel_data):
-            # Compute the average delta_views over the 4 weeks prior
-            prior_metric_values = channel_data.iloc[start_pos - weeks_average : start_pos][metric]
-            avg_prior_metric_values = prior_metric_values.mean()
-
-            # Avoid division by zero
-            if avg_prior_metric_values > 0:
-                # Compute relative delta_views for the weeks after publication
-                df_n_weeks_after = channel_data.iloc[start_pos + 1 : start_pos + 1 + n_weeks]
-
-                if df_n_weeks_after['delta_videos'].sum() == 0:
-                    relative_metric_values = df_n_weeks_after[metric].values / avg_prior_metric_values
-
-                    # Store the relative delta_views as a dictionary
-                    results.append({f"{i + 1}": relative_metric_values[i] for i in range(len(relative_metric_values))})
-
-    # Convert collected data into a DataFrame
-    result_df = pd.DataFrame(results)
-    print(f"Number of valid entries for n_weeks = {n_weeks}: {len(result_df)}")
-
-    return result_df
-
-
-def plot_relative_metric_values_all_weeks(df_music, df_entertainment, weeks, metric):
-    """
-    For each number of weeks specified in "weeks", creates the delta_views DataFrame (using relative_metric_dataframe) for Music and Entertainment 
-    categories and then plots delta_views (using plot_metric).
-
-    Args:
-        - df_music: Music time-series DataFrame
-        - df_entertainment: Entertainment time-series DataFrame
-        - weeks: array of weeks specifying the time frames over which to get delta_views
-        - metric: quantity of interest for which the DataFrame is created. Default is 'delta_views', but could also be delta_subs for example.
-    
-    Return: None
-    """
-
-    df_delta_views_list = []
-    for week in weeks:
-        df_delta_views_list.append([relative_metric_dataframe(df_music, week, metric=metric), relative_metric_dataframe(df_entertainment, week, metric=metric)])
-    
-    for i in range(len(df_delta_views_list)):
-        plot_metric(df_delta_views_list[i][0], df_delta_views_list[i][1])
+        plot_metric(df_metric_list[i][0], df_metric_list[i][1], median=median)
 
 
 
@@ -333,148 +260,7 @@ def plot_general_rolling_mean(df_music, df_ent, metric, rolling_window=4, log_sc
 
 
 
-def return_to_baseline_analysis(df, metric, baseline_window=4, tolerance=0.1, max_return_time=12, prom_percent = 0.2):
-    """
-    Analyzes the time it takes for a metric (e.g., delta_views or delta_subs) to return to baseline
-    after peaks across all channels in a category, stores channel-level results, and aggregates them.
-
-    Args:
-        df (pd.DataFrame): Time-series DataFrame for a category, containing multiple channels.
-                           Must have 'channel' as one of the columns.
-        metric (str): The column name of the metric to analyze (e.g., 'delta_views' or 'delta_subs').
-        baseline_window (int): Number of time points to calculate the rolling baseline.
-        tolerance (float): Tolerance range around the baseline (e.g., ±10%).
-        max_return_time (int): Maximum number of time points to look ahead for return to baseline.
-        prom_percent (float): Percentage of baseline that defines the prominence of detected peaks (default 0.2).
-
-    Returns:
-        dict: Aggregated results and per-channel outputs for plotting histograms.
-    """
-    # Group by channel and initialize lists for storing per-channel results
-    grouped = df.groupby('channel')
-    channel_results = []
-
-    # Get all return times instead of averaging over each channel
-    all_return_times = []
-
-    for channel, channel_data in grouped:
-        channel_data = channel_data.reset_index(drop=True)  # Ensure clean indexing
-        channel_data['baseline'] = channel_data[metric].rolling(window=baseline_window, min_periods=1).mean()
-        
-        # Detect peaks in the metric
-        prominence = prom_percent*np.array(channel_data['baseline'])
-        peaks, _ = find_peaks(channel_data[metric], prominence=prominence)
-        return_times = []
-        num_peaks = len(peaks)
-
-        for peak in peaks:
-            peak_value = channel_data[metric].iloc[peak]
-            baseline_value = channel_data['baseline'].iloc[peak]
-            tolerance_range = (1 - tolerance) * baseline_value, (1 + tolerance) * baseline_value
-
-            # Track how long it takes to return to baseline within tolerance
-            for t in range(peak + 1, min(peak + 1 + max_return_time, len(channel_data))):
-                if channel_data[metric].iloc[t] <= tolerance_range[1]:
-                    return_times.append(t - peak)
-                    break
-            else:
-                # If no return within max_return_time, record as no return
-                return_times.append(np.nan)
-
-        # Compute channel-level metrics
-        return_times = np.array(return_times, dtype=float)
-        avg_return_time = np.nanmean(return_times) if num_peaks > 0 else np.nan
-        std_return_time = np.nanstd(return_times) if num_peaks > 1 else np.nan
-        proportion_returning = np.sum(~np.isnan(return_times)) / num_peaks if num_peaks > 0 else np.nan
-        
-        all_return_times.extend(return_times)
-
-        # Store results for this channel
-        channel_results.append({
-            'channel': channel,
-            'avg_return_time': avg_return_time,
-            'std_return_time': std_return_time,
-            'proportion_returning': proportion_returning,
-            'num_peaks': num_peaks
-        })
-
-    # Convert results to a DataFrame for histogram plotting
-    results_df = pd.DataFrame(channel_results)
-
-    # Aggregate metrics across channels
-    aggregated_results = {
-        'avg_return_time': results_df['avg_return_time'].mean(),
-        'std_return_time': results_df['avg_return_time'].std(),
-        'avg_proportion_returning': results_df['proportion_returning'].mean(),
-        'std_proportion_returning': results_df['proportion_returning'].std(),
-        'total_peaks': results_df['num_peaks'].sum(),
-        'results_df': results_df,  # Include channel-level results for further analysis
-        'return_times': np.array(all_return_times)
-    }
-
-    return aggregated_results
-
-
-
-def return_times_results_and_histograms(music_return_times, entertainment_return_times):
-    """
-    Prints the Average and Standard Deviation of return times and the average proportion of peaks that return to baseline for
-    Music and Entertainment categories. Also plots the histograms of Channel Average Return Times, as well as a histogram of Return Times
-    for both Music and Entertainment.
-
-    Args:
-        - music_return_times: dictionary containing all information about Music return times
-        - entertainment_return_times: dictionary containing all information about Entertainment return times
-    
-    Return: None
-    """
-
-    # Load return times
-    return_times_music = music_return_times['return_times']
-    return_times_ent = entertainment_return_times['return_times']
-
-    # Filter out Nan values
-    return_times_music = return_times_music[~np.isnan(return_times_music)]
-    return_times_ent = return_times_ent[~np.isnan(return_times_ent)]
-
-    # Load results dataframe
-    results_df_music = music_return_times['results_df']
-    results_df_ent = entertainment_return_times['results_df']
-
-    # Access aggregated results for Music
-    print(f"Music Mean Channel Average Return Time: {music_return_times['avg_return_time']:.2f} Weeks")
-    print(f"Music Error of Mean Return Time: {music_return_times['std_return_time']/len(results_df_music['avg_return_time']):.5f} Weeks")
-    print(f"Music Mean Return Time: {np.mean(return_times_music):.2f}")
-    print(f"Music Propotion of Return: {music_return_times['avg_proportion_returning']*100:.2f}%")
-    print(f'Number of Music Peaks: {len(return_times_music)} \n')
-
-    # Access aggregated results for Entertainment
-    print(f"Entertainment Mean Channel Average Return Time: {entertainment_return_times['avg_return_time']:.2f} Weeks")
-    print(f"Entertainment Error of Mean Return Time: {entertainment_return_times['std_return_time']/len(results_df_ent['avg_return_time']):.5f} Weeks")
-    print(f"Entertainment Mean Return Time: {np.mean(return_times_ent):.2f}")
-    print(f"Entertainment Propotion of Return: {entertainment_return_times['avg_proportion_returning']*100:.2f}%")
-    print(f'Number of Entertainment Peaks: {len(return_times_ent)}')
-
-    # Plot histogram of per-channel average return times
-    plt.hist(results_df_music['avg_return_time'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
-    plt.hist(results_df_ent['avg_return_time'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
-    plt.xlabel('Return Time (weeks)')
-    plt.ylabel('Number of Channels')
-    plt.title('Histogram of Average Return Times')
-    plt.legend()
-    plt.show()
-
-    # Plot histogram of return times for Music and Entertainment
-    plt.hist(return_times_music, bins=20, alpha=0.7, log=True, label='Music', density=True)
-    plt.hist(return_times_ent, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
-    plt.xlabel('Return Time (weeks)')
-    plt.ylabel('Number of Entries')
-    plt.title('Histogram of Return Times')
-    plt.legend()
-    plt.show()
-
-
-def modified_return_to_baseline_analysis(df, metric, baseline_window=4, tolerance=0.1, max_return_time=12, prom_percent=0.2):
+def return_to_baseline_analysis(df, metric, baseline_window=4, tolerance=0.1, max_return_time=12, prom_percent=0.2):
     """
     Analyzes the time it takes for a metric (e.g., delta_views or delta_subs) to return to baseline
     after peaks across all channels in a category, stores channel-level results, and aggregates them.
@@ -561,150 +347,66 @@ def modified_return_to_baseline_analysis(df, metric, baseline_window=4, toleranc
 
 
 
-
-def calculate_decay_rates_between_peaks(df, metric, baseline_window=4, prom_percent=0.2):
+def return_times_results_and_histograms(music_return_times, entertainment_return_times):
     """
-    Calculates exponential decay rates between consecutive peaks of a specified metric for each channel.
+    Prints the Average and Standard Deviation of return times and the average proportion of peaks that return to baseline for
+    Music and Entertainment categories. Also plots the histograms of Channel Average Return Times, as well as a histogram of Return Times
+    for both Music and Entertainment.
 
     Args:
-        df (pd.DataFrame): Time-series DataFrame for a category containing multiple channels.
-                           Must have 'channel' as one of the columns.
-        metric (str): The column name of the metric to analyze (e.g., 'delta_views' or 'delta_subs').
-        baseline_window (int): Number of weeks over which to calculate rolling average (useful to find prominence of peaks) (default 4).
-        prom_percent (float): Percentage of baseline that defines the prominence of detected peaks (default 0.2).
-
-    Returns:
-        dict: Results containing decay rates for each channel and aggregated statistics.
-    """
-
-    def exponential_decay(t, y0, k):
-        """ Exponential decay model for fitting. """
-        return y0 * np.exp(-k * t)
-
-    # Group by channel and initialize lists for storing results
-    grouped = df.groupby('channel')
-    channel_results = []
-
-    all_decay_rates = []
-
-    for channel, channel_data in grouped:
-        channel_data = channel_data.reset_index(drop=True)  # Ensure clean indexing
-
-        # Detect peaks in the metric (considering noise threshold)
-        baseline = channel_data[metric].rolling(window=baseline_window, min_periods=1).mean()
-        prominence = prom_percent*np.array(baseline)
-        peaks, _ = find_peaks(channel_data[metric], prominence=prominence)
-
-        # Skip if there are fewer than 2 peaks (no decay can be calculated)
-        if len(peaks) < 2:
-            continue
-
-        decay_rates = []
-
-        # Iterate over consecutive peaks
-        for i in range(len(peaks) - 1):
-            peak_start = peaks[i]
-            peak_end = peaks[i + 1]
-
-            # Data between consecutive peaks
-            fit_window = channel_data.iloc[peak_start + 1 : peak_end]
-
-            if len(fit_window) <= 2:  # Avoid fitting if not enough points
-                continue
-
-            t = np.arange(len(fit_window))  # Time points (t=0 at the peak start)
-            y = fit_window[metric].values
-
-            if np.all(y > 0):  # Fit only if all values are positive
-                try:
-                    # Initial guess: y0 is the first value, k is a small positive number
-                    popt, _ = curve_fit(exponential_decay, t, y, p0=[y[0], 0.1], bounds=(0, np.inf))
-                    decay_rates.append(popt[1])  # Append the decay rate (k)
-                except RuntimeError:
-                    continue  # Skip if fitting fails
-
-        # Compute channel-level metrics
-        avg_decay_rate = np.mean(decay_rates) if decay_rates else np.nan
-        std_decay_rate = np.std(decay_rates) if len(decay_rates) > 1 else np.nan
-
-        # Store results for this channel
-        channel_results.append({
-            'channel': channel,
-            'avg_decay_rate': avg_decay_rate,
-            'std_decay_rate': std_decay_rate,
-            'num_peaks': len(peaks),
-            'num_fitted_peaks': len(decay_rates)
-        })
-
-        all_decay_rates.extend(decay_rates)
-
-    # Convert results to a DataFrame for further analysis
-    results_df = pd.DataFrame(channel_results)
-
-    # Aggregate metrics across channels
-    aggregated_results = {
-        'avg_decay_rate': results_df['avg_decay_rate'].mean(),
-        'std_decay_rate': results_df['avg_decay_rate'].std(),
-        'results_df': results_df,  # Include channel-level results for further analysis
-        'decay_rates': np.array(all_decay_rates)
-    }
-
-    return aggregated_results
-
-
-def decay_rates_results_and_histograms(music_decay_rates, entertainment_decay_rates):
-    """
-    Prints the Average and Standard Deviation of Decay Rates for Music and Entertainment categories. 
-    Also plots the histograms of Channel Average Decay Rates, as well as a histogram of Decay Rates for both Music and Entertainment.
-
-    Args:
-        - music_return_times: dictionary containing all information about Music decay rates
-        - entertainment_return_times: dictionary containing all information about Entertainment decay rates
+        - music_return_times: dictionary containing all information about Music return times
+        - entertainment_return_times: dictionary containing all information about Entertainment return times
     
     Return: None
     """
 
-    # Load decay rates
-    ent_decay_peaks_all = entertainment_decay_rates['decay_rates']
-    music_decay_peaks_all = music_decay_rates['decay_rates']
+    # Load return times
+    return_times_music = music_return_times['return_times']
+    return_times_ent = entertainment_return_times['return_times']
 
-    # Load results dataframes
-    music_decay_peaks_results = music_decay_rates['results_df']
-    ent_decay_peaks_results = entertainment_decay_rates['results_df']
+    # Filter out Nan values
+    return_times_music = return_times_music[~np.isnan(return_times_music)]
+    return_times_ent = return_times_ent[~np.isnan(return_times_ent)]
 
-    # Access aggregated results
-    print(f"Music Mean Channel Average Decay Rate: {music_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
-    print(f"Music Error of Decay Rate: {music_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
-    print(f"Music Mean Decay Rate: {np.mean(music_decay_peaks_all):.3f}")
-    print(f"Number of Peaks for Music: {music_decay_peaks_results['num_fitted_peaks'].sum()} \n")
+    # Load results dataframe
+    results_df_music = music_return_times['results_df']
+    results_df_ent = entertainment_return_times['results_df']
 
-    # Access aggregated results
-    print(f"Entertainment Mean Channel Average Decay Rate: {entertainment_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
-    print(f"Entertainment Error of Decay Rate: {entertainment_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
-    print(f"Entertainment Mean Decay Rate: {np.mean(ent_decay_peaks_all):.3f}")
-    print(f"Number of Peaks for Entertainment: {ent_decay_peaks_results['num_fitted_peaks'].sum()}")
+    # Access aggregated results for Music
+    print(f"Music Mean Channel Average Return Time: {music_return_times['avg_return_time']:.2f} Weeks")
+    print(f"Music Error of Mean Return Time: {music_return_times['std_return_time']/len(results_df_music['avg_return_time']):.5f} Weeks")
+    print(f"Music Mean Return Time: {np.mean(return_times_music):.2f}")
+    print(f"Music Propotion of Return: {music_return_times['avg_proportion_returning']*100:.2f}%")
+    print(f'Number of Music Peaks: {len(return_times_music)} \n')
 
-    # Histogram of per-channel average decay rates    
-    plt.hist(music_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
-    plt.hist(ent_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
-    plt.xlabel('Decay Rate (1/Weeks)')
+    # Access aggregated results for Entertainment
+    print(f"Entertainment Mean Channel Average Return Time: {entertainment_return_times['avg_return_time']:.2f} Weeks")
+    print(f"Entertainment Error of Mean Return Time: {entertainment_return_times['std_return_time']/len(results_df_ent['avg_return_time']):.5f} Weeks")
+    print(f"Entertainment Mean Return Time: {np.mean(return_times_ent):.2f}")
+    print(f"Entertainment Propotion of Return: {entertainment_return_times['avg_proportion_returning']*100:.2f}%")
+    print(f'Number of Entertainment Peaks: {len(return_times_ent)}')
+
+    # Plot histogram of per-channel average return times
+    plt.hist(results_df_music['avg_return_time'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(results_df_ent['avg_return_time'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Return Time (weeks)')
     plt.ylabel('Number of Channels')
-    plt.title('Histogram of Average Decay Rates')
+    plt.title('Histogram of Average Return Times')
     plt.legend()
     plt.show()
 
-    # Histogram of decay rates for Music and Entertainment
-    plt.hist(music_decay_peaks_all, bins=20, alpha=0.7, log=True, label='Music', density=True)
-    plt.hist(ent_decay_peaks_all, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
-    plt.xlabel('Decay Rate (1/Weeks)')
+    # Plot histogram of return times for Music and Entertainment
+    plt.hist(return_times_music, bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(return_times_ent, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Return Time (weeks)')
     plt.ylabel('Number of Entries')
-    plt.title('Histogram of Decay Rates')
+    plt.title('Histogram of Return Times')
     plt.legend()
     plt.show()
 
 
 
-def modified_calculate_decay_rates_between_peaks(df, metric, baseline_window=4, tolerance=0.1, prom_percent=0.2):
+def calculate_decay_rates_between_peaks(df, metric, baseline_window=4, tolerance=0.1, prom_percent=0.2):
     """
     Calculates exponential decay rates between consecutive peaks of a specified metric for each channel,
     ensuring the metric returns to a specified baseline before the next peak.
@@ -814,6 +516,58 @@ def modified_calculate_decay_rates_between_peaks(df, metric, baseline_window=4, 
     }
 
     return aggregated_results
+
+
+def decay_rates_results_and_histograms(music_decay_rates, entertainment_decay_rates):
+    """
+    Prints the Average and Standard Deviation of Decay Rates for Music and Entertainment categories. 
+    Also plots the histograms of Channel Average Decay Rates, as well as a histogram of Decay Rates for both Music and Entertainment.
+
+    Args:
+        - music_return_times: dictionary containing all information about Music decay rates
+        - entertainment_return_times: dictionary containing all information about Entertainment decay rates
+    
+    Return: None
+    """
+
+    # Load decay rates
+    ent_decay_peaks_all = entertainment_decay_rates['decay_rates']
+    music_decay_peaks_all = music_decay_rates['decay_rates']
+
+    # Load results dataframes
+    music_decay_peaks_results = music_decay_rates['results_df']
+    ent_decay_peaks_results = entertainment_decay_rates['results_df']
+
+    # Access aggregated results
+    print(f"Music Mean Channel Average Decay Rate: {music_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
+    print(f"Music Error of Decay Rate: {music_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Music Mean Decay Rate: {np.mean(music_decay_peaks_all):.3f} 1/Weeks")
+    print(f"Number of Peaks for Music: {music_decay_peaks_results['num_fitted_peaks'].sum()} \n")
+
+    # Access aggregated results
+    print(f"Entertainment Mean Channel Average Decay Rate: {entertainment_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
+    print(f"Entertainment Error of Decay Rate: {entertainment_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Entertainment Mean Decay Rate: {np.mean(ent_decay_peaks_all):.3f} 1/Weeks")
+    print(f"Number of Peaks for Entertainment: {ent_decay_peaks_results['num_fitted_peaks'].sum()}")
+
+    # Histogram of per-channel average decay rates    
+    plt.hist(music_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(ent_decay_peaks_results['avg_decay_rate'].dropna(), bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Decay Rate (1/Weeks)')
+    plt.ylabel('Number of Channels')
+    plt.title('Histogram of Average Decay Rates')
+    plt.legend()
+    plt.show()
+
+    # Histogram of decay rates for Music and Entertainment
+    plt.hist(music_decay_peaks_all, bins=20, alpha=0.7, log=True, label='Music', density=True)
+    plt.hist(ent_decay_peaks_all, bins=20, alpha=0.4, log=True, label='Entertainment', density=True)
+    plt.xlabel('Decay Rate (1/Weeks)')
+    plt.ylabel('Number of Entries')
+    plt.title('Histogram of Decay Rates')
+    plt.legend()
+    plt.show()
+
 
 
 def calculate_peak_heights_baseline(df, metric, baseline_window=4, prom_percent=0.2):
