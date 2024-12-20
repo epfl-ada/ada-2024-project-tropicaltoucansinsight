@@ -4,15 +4,15 @@ collab_utils.py
 Helper functions to process the data analysis for collaborations.
 """
 
-
+import os
 import re
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from tqdm import tqdm
-from . import data_utils
 from tabulate import tabulate
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from matplotlib.lines import Line2D
 from collections import defaultdict
 from scipy.stats import mannwhitneyu, ks_2samp, cramervonmises_2samp
@@ -111,7 +111,7 @@ def collab_ratio(data_file, chunk_size=500000, output_path='data/collab_counts.j
                                                 compression='gzip'), desc="Processing Chunks")):
 
         # Detect collaborations in the title of the videos
-        chunk["collab"] = chunk["title"].apply(lambda x: data_utils.detect_collaboration(x))
+        chunk["collab"] = chunk["title"].apply(lambda x: detect_collaboration(x))
         counts = chunk[chunk['collab'] == True]['channel_id'].value_counts()
 
         for creator_id, count in counts.items():
@@ -122,7 +122,8 @@ def collab_ratio(data_file, chunk_size=500000, output_path='data/collab_counts.j
     df_counts.to_json(path_or_buf=output_path, orient='records', lines=True, compression='gzip', force_ascii=False)
 
 
-def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top_p_entertainment, p, plot=True, save=True):
+def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top_p_entertainment, p, plot=True,
+                  save=True, kind="view_count"):
     """
     Print the results for the top p% of videos
 
@@ -146,7 +147,6 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
     print(f"Top {p * 100:.2f}%\n")
     print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
 
-
     if plot:
         fig, ax = plt.subplots(1, 1, figsize=(12, 8))
 
@@ -161,7 +161,13 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         sns.lineplot(x=x_music, y=df_top_p_music["cumulative_proportion"], label="Music", ax=ax)
         sns.lineplot(x=x_entertainment, y=df_top_p_entertainment["cumulative_proportion"], label="Entertainment", ax=ax)
         ax.set_xlabel("Fraction of the Total Number of Videos")
-        ax.set_ylabel("Cumulative Fraction of the Total Views")
+
+        if kind == "view_count":
+            ax.set_ylabel("Cumulative Fraction of the Total Views")
+        elif kind == "subscriber_count":
+            ax.set_ylabel("Cumulative Fraction of the Total Subscribers")
+        else:
+            raise ValueError("kind must be either 'view_count' or 'subscriber_count'")
         ax.set_title(rf"Cumulative Fraction of Views for the Top {p * 100:.0f}% of Videos", fontsize=25, pad=15)
         ax.legend()
 
@@ -169,7 +175,9 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.grid(True, alpha=0.4)
 
         if save:
-            data_utils.save_plot(f"top_{p}_views__Cumulative_Fraction.pdf", plt)
+            output_path = "Figures/Top_p_videos/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
 
         plt.show()
 
@@ -226,6 +234,9 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     if category not in ["Music", "Entertainment"]:
         raise ValueError("category must be either 'Music' or 'Entertainment'")
 
+    output_path = f"Figures/{category}/"
+    os.makedirs(output_path, exist_ok=True)
+
     fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         sns.histplot(data=data, x=col, hue="collab", hue_order=[False, True], bins=80, common_norm=False,
@@ -238,7 +249,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
             ax[i].set_yscale("log")
     plt.tight_layout()
     if save:
-        data_utils.save_plot("Collab_vs_NonCollab__Hist.pdf", plt)
+        plt.savefig(output_path + "Collab_vs_NonCollab__Hist.pdf")
     plt.show()
 
     # Boxplot
@@ -259,7 +270,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     fig.legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1, 0.9))
     plt.tight_layout()
     if save:
-        data_utils.save_plot("Collab_vs_NonCollab__Boxplot.pdf", plt)
+        plt.savefig(output_path + "Collab_vs_NonCollab__Boxplot.pdf")
     plt.show()
 
     # Complementary Cumulative Distribution Function (CCDF)
@@ -273,7 +284,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
         ax[i].legend(title="Collaboration", labels=["Yes", "No"])
     plt.tight_layout()
     if save:
-        data_utils.save_plot("Collab_vs_NonCollab__CCDF.pdf", plt)
+        plt.savefig(output_path + "Collab_vs_NonCollab__CCDF.pdf")
     plt.show()
 
 
@@ -368,7 +379,7 @@ def process_collab_count(data_file, chunk_size=500000, output_path='data/collab_
                                                 compression='gzip'), desc="Processing Chunks")):
 
         # Detect collaborations in the title of the videos
-        chunk["collab"] = chunk["title"].apply(lambda x: data_utils.detect_collaboration(x))
+        chunk["collab"] = chunk["title"].apply(lambda x: detect_collaboration(x))
         counts = chunk[chunk['collab'] == True]['channel_id'].value_counts()
 
         for creator_id, count in counts.items():
@@ -446,12 +457,14 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
                    linewidth=3, color=entertainment_color)
         ax.set_xlabel("Collaboration Ratio")
         ax.set_ylabel("Number of Channels")
-        ax.set_title("Distribution of the Collaboration Ratio for Music Channels")
+        ax.set_title(f"Distribution of the Collaboration Ratio\n for Music and Entertainment Channels")
         ax.set_yscale("log")
         ax.legend(title="Category")
         plt.tight_layout()
         if save:
-            data_utils.save_plot(f"top_{p}_views__Histplot.pdf", plt)
+            output_path = "Figures/Collaboration_ratio/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_views__Histplot.pdf")
         plt.show()
 
     else:
@@ -468,7 +481,7 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
         ax.set_xlabel("Category")
         ax.set_ylabel("Collaboration Ratio")
         ax.set_title(f"Distribution of the Collaboration Ratio\n for Music and Entertainment Channels")
-        ax.set_yscale("log")
+        # ax.set_yscale("log")
 
         if show_means:
             mean_marker = Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markeredgecolor='black',
@@ -477,7 +490,9 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
 
         plt.tight_layout()
         if save:
-            data_utils.save_plot(f"top_{p}_views__Boxplot.pdf", plt)
+            output_path = "Figures/Collaboration_ratio/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_views__Boxplot.pdf")
         plt.show()
 
 
@@ -553,7 +568,7 @@ def print_top_channels_stats(df_music_channels, df_entertainment_channels, top_p
 
 def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_channels,
                                         top_p_entertainment_channels, bottom_p_entertainment_channels,
-                                        df_collab_ratio, p, save=True):
+                                        p, save=True, kind="hist", sharey=True):
     """
     Compare the distribution of the collaboration ratio between the top p% of channels and the rest.
 
@@ -562,7 +577,6 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
         bottom_p_music_channels (pd.DataFrame): DataFrame containing the bottom (1-p)% of music channels
         top_p_entertainment_channels (pd.DataFrame): DataFrame containing the top p% of entertainment channels
         bottom_p_entertainment_channels (pd.DataFrame): DataFrame containing the bottom (1-p)% of entertainment channels
-        df_collab_ratio (pd.DataFrame): DataFrame containing the collaboration ratio for each channel
         p (float): Proportion of the total subscribers that we want to kept
         save (bool): If True, save the figure
     """
@@ -575,48 +589,98 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
     top_mean_entertainment = top_p_entertainment_channels["collab_ratio"].mean()
     bottom_mean_entertainment = bottom_p_entertainment_channels["collab_ratio"].mean()
 
-    fig, ax = plt.subplots(1, 2, figsize=(25, 8), sharey=True)
+    if kind == "hist":
+        fig, ax = plt.subplots(1, 2, figsize=(25, 8), sharey=sharey)
 
-    sns.histplot(data=top_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
-                 log_scale=False, label="Top Music Channels", stat="density", alpha=0.3, fill=True, color=top_color)
+        sns.histplot(data=top_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
+                     log_scale=False, label="Top Music Channels", stat="density", alpha=0.3, fill=True, color=top_color)
 
-    ax[0].axvline(top_mean_music, color=top_color, linestyle="--", label=rf"Top Mean = {top_mean_music * 100:.2f}%",
-                  linewidth=3)
+        ax[0].axvline(top_mean_music, color=top_color, linestyle="--", label=rf"Top Mean = {top_mean_music * 100:.2f}%",
+                      linewidth=3)
 
-    sns.histplot(data=bottom_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
-                 log_scale=False, label="Bottom Music Channels", stat="density", alpha=0.15, fill=True, color=bottom_color)
+        sns.histplot(data=bottom_p_music_channels, x="collab_ratio", bins=80, ax=ax[0], element="step", linewidth=3,
+                     log_scale=False, label="Bottom Music Channels", stat="density", alpha=0.15, fill=True,
+                     color=bottom_color)
 
-    ax[0].axvline(bottom_mean_music, color=bottom_color, linestyle="-.",
-                  label=rf"Bottom Mean = {bottom_mean_music * 100:.2f}%", linewidth=3)
+        ax[0].axvline(bottom_mean_music, color=bottom_color, linestyle="-.",
+                      label=rf"Bottom Mean = {bottom_mean_music * 100:.2f}%", linewidth=3)
 
-    ax[0].set_xlabel("Collaboration Ratio")
-    ax[0].set_ylabel("Normalized Number of Channels")
-    ax[0].set_title("Distribution of the Collaboration Ratio for Music Channels")
-    ax[0].legend()
-    ax[0].set_yscale("log")
+        ax[0].set_xlabel("Collaboration Ratio")
+        ax[0].set_ylabel("Normalized Number of Channels")
+        ax[0].set_title("Distribution of the Collaboration Ratio for Music Channels")
+        ax[0].legend()
+        ax[0].set_yscale("log")
 
-    sns.histplot(data=top_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step", linewidth=3,
-                 log_scale=False, label="Top Entertainment Channels", stat="density", alpha=0.3, fill=True, color=top_color)
+        sns.histplot(data=top_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step",
+                     linewidth=3,
+                     log_scale=False, label="Top Entertainment Channels", stat="density", alpha=0.3, fill=True,
+                     color=top_color)
 
-    ax[1].axvline(top_mean_entertainment, color=top_color, linestyle="--",
-                  label=rf"Top Mean = {top_mean_entertainment * 100:.2f}%", linewidth=3)
+        ax[1].axvline(top_mean_entertainment, color=top_color, linestyle="--",
+                      label=rf"Top Mean = {top_mean_entertainment * 100:.2f}%", linewidth=3)
 
-    sns.histplot(data=bottom_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step", linewidth=3,
-                 log_scale=False, label="Bottom Entertainment Channels", stat="density", alpha=0.15, fill=True,
-                 color=bottom_color)
+        sns.histplot(data=bottom_p_entertainment_channels, x="collab_ratio", bins=80, ax=ax[1], element="step",
+                     linewidth=3,
+                     log_scale=False, label="Bottom Entertainment Channels", stat="density", alpha=0.15, fill=True,
+                     color=bottom_color)
 
-    ax[1].axvline(bottom_mean_entertainment, color=bottom_color, linestyle="-.",
-                  label=rf"Bottom Mean = {bottom_mean_entertainment * 100:.2f}%", linewidth=3)
-    ax[1].set_xlabel("Collaboration Ratio")
-    ax[1].set_title("Distribution of the Collaboration Ratio for Entertainment Channels")
-    ax[1].legend()
-    ax[1].set_yscale("log")
-    plt.tight_layout()
+        ax[1].axvline(bottom_mean_entertainment, color=bottom_color, linestyle="-.",
+                      label=rf"Bottom Mean = {bottom_mean_entertainment * 100:.2f}%", linewidth=3)
+        ax[1].set_xlabel("Collaboration Ratio")
+        ax[1].set_title("Distribution of the Collaboration Ratio for Entertainment Channels")
+        ax[1].legend()
+        ax[1].set_yscale("log")
+        ax[1].set_ylim(1e-3, 1e2)
 
-    if save:
-        data_utils.save_plot(f"top_{p}_channels__Histplot.pdf", plt)
+        plt.tight_layout()
 
-    plt.show()
+        if save:
+            output_path = "Figures/Collaboration_ratio/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_channels__Histplot.pdf")
+
+        plt.show()
+
+    elif kind == "boxplot":
+        top_p_music_channels["is_top"] = True
+        bottom_p_music_channels["is_top"] = False
+        top_p_entertainment_channels["is_top"] = True
+        bottom_p_entertainment_channels["is_top"] = False
+        music_df = pd.concat([top_p_music_channels, bottom_p_music_channels])
+        entertainment_df = pd.concat([top_p_entertainment_channels, bottom_p_entertainment_channels])
+
+        fig, ax = plt.subplots(1, 2, figsize=(25, 8), sharey=sharey)
+
+        sns.boxplot(data=music_df, x="is_top", hue="is_top", y="collab_ratio", ax=ax[0], showmeans=True, legend=False,
+                    meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 15, 'markerfacecolor': 'red'},
+                    showfliers=False, palette=[bottom_color, top_color])
+        ax[0].set_xlabel("Channels")
+        ax[0].set_ylabel("Collaboration Ratio")
+        ax[0].set_title("Distribution of the Collaboration Ratio for Music Channels")
+        tick_positions = [0, 1]
+        tick_labels = ["Bottom Channels", "Top Channels"]
+        ax[0].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
+        ax[0].xaxis.set_major_formatter(ticker.FixedFormatter(tick_labels))
+        sns.boxplot(data=entertainment_df, x="is_top", hue="is_top", y="collab_ratio", ax=ax[1], showmeans=True, legend=False,
+                    meanprops={'marker': 'o', 'markeredgecolor': 'black', 'markersize': 15, 'markerfacecolor': 'red'},
+                    showfliers=False, palette=[bottom_color, top_color])
+        ax[1].set_xlabel("Channels")
+        ax[1].set_ylabel("Collaboration Ratio")
+        ax[1].set_title("Distribution of the Collaboration Ratio for Entertainment Channels")
+        ax[1].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
+        ax[1].xaxis.set_major_formatter(ticker.FixedFormatter(tick_labels))
+
+        plt.tight_layout()
+
+        if save:
+            output_path = "Figures/Collaboration_ratio/"
+            os.makedirs(output_path, exist_ok=True)
+            plt.savefig(output_path + f"top_{p}_channels__Boxplot.pdf")
+
+        plt.show()
+
+
+
 
 
 def test_distribution_top_vs_bottom(top_data, bottom_data, categories, columns, alpha=0.05):
@@ -648,3 +712,4 @@ def test_distribution_top_vs_bottom(top_data, bottom_data, categories, columns, 
 
     headers = ["Test", "Category", "Statistic", "P-Value", "Significant?"]
     print(tabulate(rows, headers=headers, tablefmt="fancy_grid"))
+
