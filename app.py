@@ -1,8 +1,10 @@
 import streamlit as st
 import os
+from streamlit_pdf_viewer import pdf_viewer
 
 # Define the folder paths
 STATIC_FOLDER = 'static'
+FIGURES_PDF = 'figures\pdf'
 
 # Set page configuration
 st.set_page_config(
@@ -25,6 +27,24 @@ Some claim the greatest 21st-century showdown was Floyd Mayweather versus Logan 
 
 st.markdown(""" ## The Face-Off of the Century Between the Two Biggest Contenders on YouTube: Music and Entertainment """)
 
+pdf_viewer(
+            os.path.join(FIGURES_PDF, "pie_chart.pdf"),
+            width=1000
+        )
+st.caption("Pie Chart", unsafe_allow_html=True)
+
+pdf_viewer(
+            os.path.join(FIGURES_PDF, "pie_chart_1.pdf"),
+            width=1000
+        )
+st.caption("Pie Chart 1", unsafe_allow_html=True)
+
+pdf_viewer(
+            os.path.join(FIGURES_PDF, "pie_chart_2.pdf"),
+            width=1000
+        )
+st.caption("Pie Chart 2", unsafe_allow_html=True)
+
 st.markdown(""" Show pie-charts of different metrics to justify the choice of these two categories""")
 
 st.markdown(""" ## Monetization Comparison for Music and Entertainment """)
@@ -42,6 +62,11 @@ st.markdown(""" Popularity Consistency results... """)
 st.markdown(""" ## Diversity Comparison Between Music and Entertainment""")
 
 st.markdown(""" Diversity results... """)
+
+st.markdown(""" ## Conclusion """)
+
+st.markdown(""" Something to conclude """)
+
 
 
 # Sidebar for Navigation
