@@ -13,10 +13,15 @@ st.set_page_config(
 # Title and Abstract Section
 st.title("The YouTube Heavyweights: Entertainment vs. Music Face Off")
 st.markdown("""
-Some claim the greatest 21st-century showdown was Floyd Mayweather versus Logan Paul, packed with stakes in marketing, money, and public hype. We couldn’t disagree more: the real battle is **Entertainment vs. Music on YouTube**!
-
-Leveraging the YouNiverse dataset, a massive collection of metadata covering **136k channels, 72.9M videos, and 2.8 years of time-series data**, we dive into YouTube’s top two categories. Join us as we analyze **reach, monetization**, and **audience dynamics**, uncovering the ultimate champion of YouTube's digital arena!
-""")
+Some claim the greatest 21st-century showdown was Floyd Mayweather versus Logan Paul, packed with stakes in marketing, \
+            money, and public hype. We couldn’t disagree more: the real battle is Entertainment vs. Music on YouTube! \
+            Leveraging the YouNiverse dataset, a massive collection of metadata covering 136k channels, 72.9M videos, and 2.8 years of \
+            time series data on views and subscribers, we dive into YouTube’s top two categories, analyzing their reach through views, \
+            subscriber counts, and strategic collaborations. Do entertainment creators ramp up content in December to maximize ad revenue? \
+            Do music artists dominate the long game thanks to loyal fan bases? From seasonal trends to community dynamics, \
+            we’ll explore how these giants shape and reshape their audiences. Get ready for a data showdown where each side fights for \
+            the throne of influence, popularity, and engagement. Through time series analysis, hypothetical monetization, and network insights, \
+            this is YouTube’s ultimate battle—where only one category can claim the crown in the world’s biggest digital arena!""")
 
 st.markdown("""
 1. Justification du choix Music & Entertainment: 
