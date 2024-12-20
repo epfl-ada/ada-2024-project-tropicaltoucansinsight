@@ -150,7 +150,7 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
     print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
 
     if plot:
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        fig, ax = plt.subplots(1, 1, figsize=(12, 6))
 
         # Compute the fraction of the total number of videos that the top p% represent
         fraction_music = len(df_top_p_music) / len(df_views_music)
@@ -165,12 +165,13 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.set_xlabel("Fraction of the Total Number of Videos")
 
         if kind == "view_count":
-            ax.set_ylabel("Cumulative Fraction of the Total Views")
+            ax.set_ylabel(f"Cumulative Fraction of\n the Total Views")
+            ax.set_title(rf"Cumulative Fraction of Views for the Top Videos", fontsize=25, pad=15)
         elif kind == "subscriber_count":
-            ax.set_ylabel("Cumulative Fraction of the Total Subscribers")
+            ax.set_ylabel(f"Cumulative Fraction of \nthe Total Subscribers")
+            ax.set_title(rf"Cumulative Fraction of Subscribers for the Top Videos", fontsize=25, pad=15)
         else:
             raise ValueError("kind must be either 'view_count' or 'subscriber_count'")
-        ax.set_title(rf"Cumulative Fraction of Views for the Top {p * 100:.0f}% of Videos", fontsize=25, pad=15)
         ax.legend()
 
         ax.set_ylim(0, 1)
@@ -238,7 +239,6 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     fig, axes = plt.subplots(2, len(columns), figsize=(12 * len(columns), 12),
                              gridspec_kw={'height_ratios': [1, 3]}, sharex='col')
 
-
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         # Horizontal boxplots on the top row
         sns.boxplot(
@@ -258,7 +258,7 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
         )
         axes[0, i].set_xlabel("")
         axes[0, i].set_ylabel("")
-        axes[0, i].set_yticklabels(["No", "Yes"])
+        axes[0, i].set_yticklabels(["No", "Yes"], fontsize=30)
         axes[0, i].set_title(f"Distribution of the {custom_labels[col]}\n for {category} Videos")
 
         # Histograms
@@ -278,14 +278,15 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
             alpha=0.15,
             linewidth=3,
         )
-        axes[1, i].legend(title="Collaboration", labels=["Yes", "No"])
-        axes[1, i].plot([], [], linestyle='--', color='red', label='Mean')
-        axes[1, i].set_xlabel(custom_labels[col])
-        axes[1, i].set_ylabel("Normalized Number of Videos")
+        axes[1, i].legend(title="Collaboration", labels=["Yes", "No"], fontsize=30, title_fontsize=32)
+        axes[1, i].set_xlabel(custom_labels[col], fontsize=30)
+        axes[1, i].tick_params(axis='both', labelsize=25)
+
         if y_log:
             axes[1, i].set_yscale("log")
 
-    axes[0, 0].set_ylabel("Collaboration")
+    axes[1, 0].set_ylabel("Normalized Number of Videos", fontsize=30)
+    axes[0, 0].set_ylabel("Collaboration", fontsize=30)
     plt.tight_layout()
     if save:
         data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Hist_Boxplot", plt, overwrite=True)
