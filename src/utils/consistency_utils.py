@@ -443,14 +443,14 @@ def return_times_results_and_histograms(music_return_times, entertainment_return
 
     # Access aggregated results for Music
     print(f"Music Mean Channel Average Return Time: {music_return_times['avg_return_time']:.2f} Weeks")
-    print(f"Music Standard Deviation of Mean Return Time: {music_return_times['std_return_time']/len(results_df_music['avg_return_time']):.5f} Weeks")
+    print(f"Music Error of Mean Return Time: {music_return_times['std_return_time']/len(results_df_music['avg_return_time']):.5f} Weeks")
     print(f"Music Mean Return Time: {np.mean(return_times_music):.2f}")
     print(f"Music Propotion of Return: {music_return_times['avg_proportion_returning']*100:.2f}%")
     print(f'Number of Music Peaks: {len(return_times_music)} \n')
 
     # Access aggregated results for Entertainment
     print(f"Entertainment Mean Channel Average Return Time: {entertainment_return_times['avg_return_time']:.2f} Weeks")
-    print(f"Entertainment Standard Deviation of Mean Return Time: {entertainment_return_times['std_return_time']/len(results_df_ent['avg_return_time']):.5f} Weeks")
+    print(f"Entertainment Error of Mean Return Time: {entertainment_return_times['std_return_time']/len(results_df_ent['avg_return_time']):.5f} Weeks")
     print(f"Entertainment Mean Return Time: {np.mean(return_times_ent):.2f}")
     print(f"Entertainment Propotion of Return: {entertainment_return_times['avg_proportion_returning']*100:.2f}%")
     print(f'Number of Entertainment Peaks: {len(return_times_ent)}')
@@ -674,13 +674,13 @@ def decay_rates_results_and_histograms(music_decay_rates, entertainment_decay_ra
 
     # Access aggregated results
     print(f"Music Mean Channel Average Decay Rate: {music_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
-    print(f"Music Standard deviation of Decay Rate: {music_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Music Error of Decay Rate: {music_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
     print(f"Music Mean Decay Rate: {np.mean(music_decay_peaks_all):.3f}")
     print(f"Number of Peaks for Music: {music_decay_peaks_results['num_fitted_peaks'].sum()} \n")
 
     # Access aggregated results
     print(f"Entertainment Mean Channel Average Decay Rate: {entertainment_decay_rates['avg_decay_rate']:.3f} 1/Weeks")
-    print(f"Entertainment Standard deviation of Decay Rate: {entertainment_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
+    print(f"Entertainment Error of Decay Rate: {entertainment_decay_rates['std_decay_rate']/len(music_decay_peaks_results['avg_decay_rate']):.6f} 1/Weeks")
     print(f"Entertainment Mean Decay Rate: {np.mean(ent_decay_peaks_all):.3f}")
     print(f"Number of Peaks for Entertainment: {ent_decay_peaks_results['num_fitted_peaks'].sum()}")
 
@@ -910,8 +910,8 @@ def peak_heights_histogram(music_peaks, entertainment_peaks):
     print(f"Number of Peaks for Entertainment: {len(entertainment_peaks['peak_heights'])}")
 
     fig = plt.figure(figsize=(15, 8))
-    plt.hist(entertainment_peaks['peak_heights'], bins=logbins_ent, alpha=0.7, log=True, label='Entertainment', density=False)
-    plt.hist(music_peaks['peak_heights'], bins=logbins_music, alpha=0.7, log=True, label='Music', density=False)
+    plt.hist(entertainment_peaks['peak_heights'], bins=logbins_ent, alpha=0.7, log=True, label='Entertainment', density=False, color='darkorange')
+    plt.hist(music_peaks['peak_heights'], bins=logbins_music, alpha=0.7, log=True, label='Music', density=False, color='dodgerblue')
     plt.xlabel('Peak Height')
     plt.ylabel('Number of Peaks')
     plt.title('Histogram of Peak Heights Above Baseline - Log Scale')
