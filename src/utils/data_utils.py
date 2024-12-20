@@ -1123,3 +1123,66 @@ def plot_histogram_log_scale(df, column_name, title, xlabel, ylabel):
     plt.show()
 
 
+def load_pickle(file_path):
+    """
+    Loads and returns a pickled matplotlib figure.
+
+    Args:
+        file_path (str): Path to the pickle file.
+
+    Returns:
+        plt.Figure: The loaded matplotlib figure.
+    """
+    try:
+        with open(file_path, 'rb') as file:
+            fig = pickle.load(file)
+        return fig
+    except (FileNotFoundError, pickle.UnpicklingError) as e:
+        print(f"Error loading pickle file: {e}")
+        return None
+
+
+def modify_axes(fig, xlabel=None, ylabel=None, xlim=None, ylim=None):
+    """
+    Modifies the axes of a matplotlib figure.
+
+    Args:
+        fig (plt.Figure): The matplotlib figure to modify.
+        xlabel (str): New label for the x-axis.
+        ylabel (str): New label for the y-axis.
+        xlim (tuple): New limits for the x-axis (min, max).
+        ylim (tuple): New limits for the y-axis (min, max).
+    """
+    axes = fig.get_axes()  # Get all axes in the figure
+    for ax in axes:
+        if xlabel:
+            ax.set_xlabel(xlabel)
+        if ylabel:
+            ax.set_ylabel(ylabel)
+        if xlim:
+            ax.set_xlim(xlim)
+        if ylim:
+            ax.set_ylim(ylim)
+    return fig
+
+
+def save_figure(fig, output_path, pdf_name="modified_figure.pdf", pickle_name="modified_figure.pkl"):
+    """
+    Saves a matplotlib figure to both PDF and pickle formats.
+
+    Args:
+        fig (plt.Figure): The matplotlib figure to save.
+        output_path (str): Directory path where the files will be saved.
+        pdf_name (str): Name of the output PDF file.
+        pickle_name (str): Name of the output pickle file.
+    """
+    # Save as PDF
+    pdf_path = os.path.join(output_path, pdf_name)
+    fig.savefig(pdf_path, format="pdf", bbox_inches="tight")
+    print(f"Figure saved as PDF: {pdf_path}")
+
+    # Save as pickle
+    pickle_path = os.path.join(output_path, pickle_name)
+    with open(pickle_path, "wb") as file:
+        pickle.dump(fig, file)
+    print(f"Figure saved as pickle: {pickle_path}")

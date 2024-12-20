@@ -443,7 +443,7 @@ def plot_diversity_histogram(diversities, filename='diversity_histogram', show_m
     for i, (category, values) in enumerate(diversities.items()):
         mean_value = np.mean(values)
         sns.histplot(values, bins=40, element="step", linewidth=3, log_scale=False, label=labels[i],
-                     stat="density", alpha=0.2, fill=True, color=colors[i])
+                      stats='density', alpha=0.2, fill=True, color=colors[i])
         if show_means:
             plt.axvline(mean_value, color=colors[i], linestyle="--" if i == 0 else "dotted",
                         label=f"Mean {labels[i].lower()}: {mean_value:.2f}", linewidth=3)
