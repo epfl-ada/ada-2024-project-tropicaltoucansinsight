@@ -23,11 +23,26 @@ Some claim the greatest 21st-century showdown was Floyd Mayweather versus Logan 
             the throne of influence, popularity, and engagement. Through time series analysis, hypothetical monetization, and network insights, \
             this is YouTube’s ultimate battle—where only one category can claim the crown in the world’s biggest digital arena!""")
 
-st.markdown("""
-1. Justification du choix Music & Entertainment: 
-    - Camemberts + distributions 
-2. Différentes analyses
-""")
+st.markdown(""" ## The Face-Off of the Century Between the Two Biggest Contenders on YouTube: Music and Entertainment """)
+
+st.markdown(""" Show pie-charts of different metrics to justify the choice of these two categories""")
+
+st.markdown(""" ## Monetization Comparison for Music and Entertainment """)
+
+st.markdown(""" Monetization results... """)
+
+st.markdown(""" ## Collaboration Comparison Between Music and Entertainment""")
+
+st.markdown(""" Collaboration results... """)
+
+st.markdown(""" ## Popularity Consistency Comparison Between Music and Entertainment""")
+
+st.markdown(""" Popularity Consistency results... """)
+
+st.markdown(""" ## Diversity Comparison Between Music and Entertainment""")
+
+st.markdown(""" Diversity results... """)
+
 
 # Sidebar for Navigation
 st.sidebar.title("Navigation")
