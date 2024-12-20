@@ -147,9 +147,7 @@ def get_clusters_from_df(df, text_column, num_clusters=100, max_features=10000, 
         text_features = vectorizer.fit_transform(combined_text)
     except ValueError as e:
         print(f"TF-IDF Vectorization failed: {e}")
-
-    if text_features.shape[0] < num_clusters:
-        print(e)
+        return ['error']
 
     # KMeans Clustering
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
@@ -509,7 +507,7 @@ def compute_avg_distances(split_dataframes, embeddings, date_format='mixed'):
     return avg_distances_dataframes
 
 
-def compute_channel_diversities(dataframes, channel_ids, glove_embeddings):
+def compute_channel_diversities(dataframes, channel_ids, glove_embeddings, topk=None):
     """
     Computes the average diversity for each channel in the given dataframes.
 
@@ -525,6 +523,8 @@ def compute_channel_diversities(dataframes, channel_ids, glove_embeddings):
 
     for key in channel_ids.keys():
         channel_ids[key] = channel_ids[key][:]  # Copy the list to ensure no modification
+        if topk is not None:
+            channel_ids[key] = channel_ids[key][:topk]
 
     for key, df in dataframes.items():
         diversities[key] = []
