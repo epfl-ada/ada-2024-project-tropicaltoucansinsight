@@ -6,10 +6,12 @@ Helper functions to process the data analysis for collaborations.
 
 import os
 import re
+import pickle
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from tqdm import tqdm
+from . import data_utils
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -175,9 +177,7 @@ def top_p_results(df_views_music, df_top_p_music, df_views_entertainment, df_top
         ax.grid(True, alpha=0.4)
 
         if save:
-            output_path = "Figures/Top_p_videos/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Cumulative_Fraction.pdf")
+            data_utils.save_plot(f"top_{p}_views__Cumulative_Fraction", plt, overwrite=True)
 
         plt.show()
 
@@ -234,9 +234,6 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     if category not in ["Music", "Entertainment"]:
         raise ValueError("category must be either 'Music' or 'Entertainment'")
 
-    output_path = f"Figures/{category}/"
-    os.makedirs(output_path, exist_ok=True)
-
     fig, ax = plt.subplots(1, len(columns), figsize=(12 * len(columns), 8))
     for i, (col, x_log, y_log) in enumerate(zip(columns, x_logs, y_logs)):
         sns.histplot(data=data, x=col, hue="collab", hue_order=[False, True], bins=80, common_norm=False,
@@ -249,7 +246,8 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
             ax[i].set_yscale("log")
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__Hist.pdf")
+        data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Hist", plt, overwrite=True)
+
     plt.show()
 
     # Boxplot
@@ -270,7 +268,8 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
     fig.legend(handles=[mean_marker], loc='upper left', bbox_to_anchor=(1, 0.9))
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__Boxplot.pdf")
+        data_utils.save_plot(f"{category}_Collab_vs_NonCollab__Boxplot", plt, overwrite=True)
+
     plt.show()
 
     # Complementary Cumulative Distribution Function (CCDF)
@@ -284,7 +283,8 @@ def plot_comparison_collab_and_non_collab(data, category, columns, x_logs, y_log
         ax[i].legend(title="Collaboration", labels=["Yes", "No"])
     plt.tight_layout()
     if save:
-        plt.savefig(output_path + "Collab_vs_NonCollab__CCDF.pdf")
+        data_utils.save_plot(f"{category}_Collab_vs_NonCollab__CCDF", plt, overwrite=True)
+
     plt.show()
 
 
@@ -462,9 +462,8 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
         ax.legend(title="Category")
         plt.tight_layout()
         if save:
-            output_path = "Figures/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Histplot.pdf")
+            data_utils.save_plot(f"top_{p}_views__Histplot", plt, overwrite=True)
+
         plt.show()
 
     else:
@@ -490,9 +489,8 @@ def plot_collab_ratio_distribution(df_music, df_entertainment, df_collab_ratio, 
 
         plt.tight_layout()
         if save:
-            output_path = "Figures/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_views__Boxplot.pdf")
+            data_utils.save_plot(f"top_{p}_views__Boxplot", plt, overwrite=True)
+
         plt.show()
 
 
@@ -568,7 +566,7 @@ def print_top_channels_stats(df_music_channels, df_entertainment_channels, top_p
 
 def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_channels,
                                         top_p_entertainment_channels, bottom_p_entertainment_channels,
-                                        p, save=True, kind="hist", sharey=True):
+                                        p, fig_name=None, save=True, kind="hist", sharey=True, ):
     """
     Compare the distribution of the collaboration ratio between the top p% of channels and the rest.
 
@@ -607,7 +605,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
 
         ax[0].set_xlabel("Collaboration Ratio")
         ax[0].set_ylabel("Normalized Number of Channels")
-        ax[0].set_title("Distribution of the Collaboration Ratio for Music Channels")
+        ax[0].set_title(f"Distribution of the Collaboration Ratio\n for Music Channels")
         ax[0].legend()
         ax[0].set_yscale("log")
 
@@ -627,7 +625,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
         ax[1].axvline(bottom_mean_entertainment, color=bottom_color, linestyle="-.",
                       label=rf"Bottom Mean = {bottom_mean_entertainment * 100:.2f}%", linewidth=3)
         ax[1].set_xlabel("Collaboration Ratio")
-        ax[1].set_title("Distribution of the Collaboration Ratio for Entertainment Channels")
+        ax[1].set_title(f"Distribution of the Collaboration Ratio \nfor Entertainment Channels")
         ax[1].legend()
         ax[1].set_yscale("log")
         ax[1].set_ylim(1e-3, 1e2)
@@ -635,9 +633,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
         plt.tight_layout()
 
         if save:
-            output_path = "Figures/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_channels__Histplot.pdf")
+            data_utils.save_plot(f"top_{p}_channels__Histplot", plt, overwrite=True)
 
         plt.show()
 
@@ -656,7 +652,7 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
                     showfliers=False, palette=[bottom_color, top_color])
         ax[0].set_xlabel("Channels")
         ax[0].set_ylabel("Collaboration Ratio")
-        ax[0].set_title("Distribution of the Collaboration Ratio for Music Channels")
+        ax[0].set_title(f"Distribution of the Collaboration Ratio\nfor Music Channels")
         tick_positions = [0, 1]
         tick_labels = ["Bottom Channels", "Top Channels"]
         ax[0].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
@@ -666,21 +662,21 @@ def compare_collab_ratio_top_p_channels(top_p_music_channels, bottom_p_music_cha
                     showfliers=False, palette=[bottom_color, top_color])
         ax[1].set_xlabel("Channels")
         ax[1].set_ylabel("Collaboration Ratio")
-        ax[1].set_title("Distribution of the Collaboration Ratio for Entertainment Channels")
+        ax[1].set_title(f"Distribution of the Collaboration Ratio \nfor Entertainment Channels")
         ax[1].xaxis.set_major_locator(ticker.FixedLocator(tick_positions))
         ax[1].xaxis.set_major_formatter(ticker.FixedFormatter(tick_labels))
 
         plt.tight_layout()
 
         if save:
-            output_path = "Figures/Collaboration_ratio/"
-            os.makedirs(output_path, exist_ok=True)
-            plt.savefig(output_path + f"top_{p}_channels__Boxplot.pdf")
+            if fig_name is None:
+                fig_name = f"top_{p}_channels__Boxplot"
+                if sharey:
+                    fig_name = f"top_{p}_channels__Boxplot_sharey"
+
+            data_utils.save_plot(fig_name, plt, overwrite=True)
 
         plt.show()
-
-
-
 
 
 def test_distribution_top_vs_bottom(top_data, bottom_data, categories, columns, alpha=0.05):
