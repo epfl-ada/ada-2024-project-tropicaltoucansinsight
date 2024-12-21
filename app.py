@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import io
-import pickle
 import base64
 import pandas as pd
 from streamlit_pdf_viewer import pdf_viewer
