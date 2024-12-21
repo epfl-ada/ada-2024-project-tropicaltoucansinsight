@@ -190,7 +190,7 @@ if selected_section == "Analysis and Results":
 The fight resumes, and it’s clear both contenders have taken the message to heart. A shift in strategy is evident as both categories bring fresh energy to the battle.  But did the coaches give good advice? Is collaboration truly beneficial? To answer this, we first investigate whether collaboration positively impacts video performance metrics—views, likes, and dislikes—in each category.  However, before diving into the data, we need to detect which videos are collaborations. Titles play a crucial role in this process, as they are often the first point of interaction for viewers and can significantly influence engagement. Words like _feat_, _ft_, and _collaboration_ in titles are strong indicators of joint efforts between creators and may even attract more attention by highlighting partnerships. To identify collaborative videos, we use a keyword-based method, scanning titles for terms that commonly indicate collaboration. This approach enables us to isolate and analyse these videos effectively.  Our analysis then compares the performance of collaborative and non-collaborative videos through visual methods such as histograms and boxplots. Additionally, we apply statistical tests to determine whether the observed differences are significant. 
 
 To understand how collaboration could tip the scales for leading channels, we use our  data, focusing on the videos with the highest views that collectively contribute to 95% of the total views in each category. The results of the filtering and collaboration detection are displayed in the table bellow. 
-    <\div>""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 
     data = { "Category": ["Music", "Entertainment"], "Original Number of Videos": [8197981, 12015676], "Top Videos (95%)": [541108, 1782414], "Fraction of Videos in the Top (%)": [6.60, 14.83], "Number of Detected Collaborations": [67893, 46357], "Fraction of Collaborations in the Top (%)": [12.55, 2.60], }
@@ -206,7 +206,7 @@ The contenders circle each other, eyes locked, each meticulously studying their 
 In the Music category, collaborative videos reveal a clear advantage. The data show that collaborations lead to higher averages in views, likes, and even dislikes by factors of 1.74, 1.68 and 1.60 respectively.</div>""", unsafe_allow_html=True)
 
     music_collab_vs_non_collab_fig = os.path.join(FIGURES_PDF, "Music_Collab_vs_NonCollab__Hist_Boxplot.pdf")
-    pdf_viewer(music_collab_vs_non_collab_fig, width=900, height=450)
+    pdf_viewer(music_collab_vs_non_collab_fig, width=900, height=300)
 
     st.markdown("""<div style="text-align: justify;">
     The shifts in distribution are quite clear, with collaborative videos pulling ahead. However, this rise in engagement is not without its nuances: the increase in dislikes suggests that while collaborations draw more attention, they may also provoke more polarized reactions. In our statistical analysis we always observe p-values below many orders of magnitudes bellow the significance threshold $0.05$. This confirms that the distributions between collaborative and non-collaborative videos in Music are distinctly different, solidifying the collaboration effect as a driver of engagement.
@@ -215,7 +215,7 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     </div>""", unsafe_allow_html=True)
 
     file2 = os.path.join(FIGURES_PDF, "Entertainment_Collab_vs_NonCollab__Hist_Boxplot.pdf")
-    pdf_viewer(file2, width=900, height=450)
+    pdf_viewer(file2, width=900, height=300)
 
     st.markdown("""
                 <div style="text-align: justify;">
@@ -237,7 +237,7 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
 
     file4 = os.path.join(FIGURES_PDF, "top_0.6_channels__Hist_Boxplot.pdf")
-    pdf_viewer(file4, width=900, height=450)
+    pdf_viewer(file4, width=900, height=400)
 
 
     st.markdown("""
@@ -267,10 +267,10 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Figures side by side for time-series of overall delta_views mean and delta_videos mean
     fig_path_1 = os.path.join(FIGURES_PDF, "general_rolling_mean.pdf")
-    pdf_viewer(fig_path_1, width=900, height=600)
+    pdf_viewer(fig_path_1, width=900, height=400)
 
     fig_path_2 = os.path.join(FIGURES_PDF, "general_rolling_mean_2.pdf")
-    pdf_viewer(fig_path_2, width=900, height=600)
+    pdf_viewer(fig_path_2, width=900, height=400)
 
     col1, col2 = st.columns(2)
 
@@ -296,10 +296,10 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Figures side by side for time-series of filtered delta_views and delta_videos mean
     fig_path_1 = os.path.join(FIGURES_PDF, "general_rolling_mean_3.pdf")
-    pdf_viewer(fig_path_1, width=900, height=600)
+    pdf_viewer(fig_path_1, width=900, height=400)
 
     fig_path_2 = os.path.join(FIGURES_PDF, "general_rolling_mean_5.pdf")
-    pdf_viewer(fig_path_2, width=900, height=600)
+    pdf_viewer(fig_path_2, width=900, height=400)
 
     col1, col2 = st.columns(2)
 
@@ -343,10 +343,10 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Figures side by side for overall return times
     fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_return_times.pdf")
-    pdf_viewer(fig_path_1, width=1200, height=900)
+    pdf_viewer(fig_path_1, width=1200, height=600)
 
     fig_path_2 = os.path.join(FIGURES_PKL, "overall_return_times.pdf")
-    pdf_viewer(fig_path_2, width=1200, height=900)
+    pdf_viewer(fig_path_2, width=1200, height=600)
 
     col1, col2 = st.columns(2)
 
@@ -371,10 +371,10 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     # Figures side by side for overall decay rates
 
     fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_decay_rates.pdf")
-    pdf_viewer(fig_path_1, width=1200, height=900)
+    pdf_viewer(fig_path_1, width=1200, height=600)
 
     fig_path_2 = os.path.join(FIGURES_PKL, "overall_decay_rates.pdf")
-    pdf_viewer(fig_path_2, width=1200, height=900)
+    pdf_viewer(fig_path_2, width=1200, height=600)
 
     col1, col2 = st.columns(2)
 
@@ -403,7 +403,7 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Figure of overall peak heights
     fig_path_1 = os.path.join(FIGURES_PKL, "Peak_Heights_Overall.pdf")
-    pdf_viewer(fig_path_1, width=1200, height=900)
+    pdf_viewer(fig_path_1, width=1200, height=600)
 
     st.write("")
     st.markdown("""<div style="text-align: justify;">Well, it seems as though we have a winner for this round! The distribution of the peak heights is very similar between Music\
@@ -464,7 +464,7 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Overall time evolution of delta_views
     fig1_path = os.path.join(FIGURES_PDF, "wordcloud_music_vs_entertainment_general.pdf")
-    pdf_viewer(fig1_path, width=1200, height=900)
+    pdf_viewer(fig1_path, width=1200, height=400)
 
     """But now, it’s time to quantify this diversity and crown the evening's ultimate champion—the suspense is unbearable! Now that we have identified the main themes for each category, we can calculate the average distance between them. The greater this distance, the more diverse the themes; the smaller it is, the less varied they are. 
 
@@ -474,7 +474,7 @@ In essence, each word is assigned a vector, and we calculate the average distanc
 
     # Overall time evolution of delta_views
     fig1_path = os.path.join(FIGURES_PDF, "diversity_histogram.pdf")
-    pdf_viewer(fig1_path, width=1200, height=800)
+    pdf_viewer(fig1_path, width=1200, height=600)
 
 
     """We notice that the distributions are quite similar, but Music shows a slightly higher average diversity. Yet, something feels off—we're not accounting for the timeline of the videos, i.e., how diversity evolves over time and which category ultimately crosses the finish line as the most diverse.""" 
@@ -497,11 +497,11 @@ However, it's still tricky to pinpoint the ultimate winner, as the two curves re
 
     # Overall time evolution of delta_views
     fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_year.pdf")
-    pdf_viewer(fig1_path, width=1200, height=900)
+    pdf_viewer(fig1_path, width=1200, height=800)
 
     # Overall time evolution of delta_views
     fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_years_zoom.pdf")
-    pdf_viewer(fig1_path, width=1200, height=900)
+    pdf_viewer(fig1_path, width=1200, height=800)
 
     """And there it is—crystal clear! We can now see how the diversity scores of the two categories intertwined over time. At first, Entertainment held the lead, only to be overtaken by Music, which gained a comfortable advantage. But in a stunning turn of events, Entertainment, against all odds, made an incredible comeback, snatching the lead and finishing as the winner! 
 
