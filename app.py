@@ -420,18 +420,18 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     st.write("")
     # Select time-series figures
-    def get_svg_from_figure(fig_path):
-        with open(fig_path, "rb") as f:
-            fig = pickle.load(f)
-        svg_buffer = io.StringIO()
-        fig.savefig(svg_buffer, format="svg", bbox_inches="tight")
-        svg_buffer.seek(0)
-        svg_data = svg_buffer.getvalue()
+    # def get_svg_from_figure(fig_path):
+        #with open(fig_path, "rb") as f:
+        #    fig = pickle.load(f)
+        #svg_buffer = io.StringIO()
+        #fig.savefig(svg_buffer, format="svg", bbox_inches="tight")
+        #svg_buffer.seek(0)
+        #svg_data = svg_buffer.getvalue()
         # Ensure the SVG fits the container
-        svg_data_scaled = svg_data.replace(
-            '<svg ', '<svg style="width:100%; height:auto; display:block; margin:auto;" '
-        )
-        return svg_data_scaled
+        #svg_data_scaled = svg_data.replace(
+        #    '<svg ', '<svg style="width:100%; height:auto; display:block; margin:auto;" '
+        #)
+        # return svg_data_scaled
 
     # Paths to figures
     figure_paths = {
