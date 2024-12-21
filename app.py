@@ -122,26 +122,11 @@ if selected_section == "Analysis and Results":
     
     st.write("")
 
-    fig1_path = os.path.join(FIGURES_PKL, "pie_chart.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=600, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "pie_chart.pdf")
+    pdf_viewer(fig1_path, width=900, height=600)
 
-
-    fig1_path = os.path.join(FIGURES_PKL, "pie_chart_1.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=600, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "pie_chart_1.pdf")
+    pdf_viewer(fig1_path, width=900, height=600)
 
     st.markdown("""<div style="text-align: justify;">We observe that Music and Entertainment together represent approximately 35% of total number of channels in the dataset and \
             amass approximately 45% of the number of subscribers. Therefore, these are clearly the two heavyweight categories of the YouNiverse \
@@ -161,8 +146,14 @@ if selected_section == "Analysis and Results":
 
 
     # Figures side by side for overall decay rates
-    fig_path_1 = os.path.join(FIGURES_PDF, "Distribution_of_Duration_mieux.pdf")
-    pdf_viewer(fig_path_1, width=900, height=450)
+
+    fig_path_1 = str(os.path.join(FIGURES_PDF, "Distribution_of_Duration_mieux.png"))
+    image_data = base64.b64decode(fig_path_1)
+
+    # Display the image
+    # st.image(image_data, caption="Base64 Image", use_column_width=True)
+    #fig_path_1 = os.path.join(FIGURES_PDF, "Distribution_of_Duration_mieux.pdf")
+    #pdf_viewer(fig_path_1, width=900, height=450)
 
 
     fig_path_2 = os.path.join(FIGURES_PDF, "Distribution_of_Number of Views.pdf")
@@ -275,36 +266,24 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
 
     # Figures side by side for time-series of overall delta_views mean and delta_videos mean
-    fig_path_1 = os.path.join(FIGURES_PKL, "general_rolling_mean.pkl")
-    with open(fig_path_1, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data1 = svg_buffer.getvalue()
-    svg_data_scaled1 = svg_data1.replace('<svg ', '<svg style="width:100%; height:auto;" ')
+    fig_path_1 = os.path.join(FIGURES_PDF, "general_rolling_mean.pdf")
+    pdf_viewer(fig_path_1, width=900, height=600)
 
-    fig_path_2 = os.path.join(FIGURES_PKL, "general_rolling_mean_2.pkl")
-    with open(fig_path_2, "rb") as f:
-        fig2 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig2.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data2 = svg_buffer.getvalue()
-    svg_data_scaled2 = svg_data2.replace('<svg ', '<svg style="width:100%; height:auto;" ')
+    fig_path_2 = os.path.join(FIGURES_PDF, "general_rolling_mean_2.pdf")
+    pdf_viewer(fig_path_2, width=900, height=600)
 
     col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled1}</div>',
-            unsafe_allow_html=True,
-        )
-    with col2:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled2}</div>',
-            unsafe_allow_html=True,
-        )
+    #with col1:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled1}</div>',
+       #     unsafe_allow_html=True,
+        #)
+    #with col2:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled2}</div>',
+       #     unsafe_allow_html=True,
+        #)
     st.write("")
     st.markdown("""<div style="text-align: justify;">The result is immediately clear: as of approximately 2017, Entertainment channels dominate with higher average number of\
                 new views and new videos each week. So at a first glance, it would seem as though Entertainment has higher weekly average popularity.\
@@ -316,36 +295,24 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     st.write("")
 
     # Figures side by side for time-series of filtered delta_views and delta_videos mean
-    fig_path_1 = os.path.join(FIGURES_PKL, "general_rolling_mean_3.pkl")
-    with open(fig_path_1, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data1 = svg_buffer.getvalue()
-    svg_data_scaled1 = svg_data1.replace('<svg ', '<svg style="width:100%; height:auto;" ')
+    fig_path_1 = os.path.join(FIGURES_PDF, "general_rolling_mean_3.pdf")
+    pdf_viewer(fig_path_1, width=900, height=600)
 
-    fig_path_2 = os.path.join(FIGURES_PKL, "general_rolling_mean_5.pkl")
-    with open(fig_path_2, "rb") as f:
-        fig2 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig2.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data2 = svg_buffer.getvalue()
-    svg_data_scaled2 = svg_data2.replace('<svg ', '<svg style="width:100%; height:auto;" ')
+    fig_path_2 = os.path.join(FIGURES_PDF, "general_rolling_mean_5.pdf")
+    pdf_viewer(fig_path_2, width=900, height=600)
 
     col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled1}</div>',
-            unsafe_allow_html=True,
-        )
-    with col2:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled2}</div>',
-            unsafe_allow_html=True,
-        )
+    #with col1:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled1}</div>',
+       #     unsafe_allow_html=True,
+        #)
+    #with col2:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled2}</div>',
+       #     unsafe_allow_html=True,
+        #)
     st.write("")
 
     st.markdown("""<div style="text-align: justify;">This time around, the advantage is less pronounced: Music's top assets seem to rival those of Entertainment for the average number\
@@ -357,15 +324,10 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
                 can get an unconfounded look at how popularity decays. </div>""", unsafe_allow_html=True)
     st.write("")
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "Overall_Time_Evolution_Delta_Views.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=900, scrolling=True)
+
+    fig1_path = os.path.join(FIGURES_PDF, "Overall_Time_Evolution_Delta_Views.pdf")
+    pdf_viewer(fig1_path, width=1200, height=900)
+
     st.write("")
     st.markdown("""<div style="text-align: justify;">What an interesting turn of events! After the upload of a video, Music channels have a higher average number of new views per week, \
                 for all time frames. This is a surprising result, as before we saw that Entertainment channels had a higher mean number of views \
@@ -380,36 +342,24 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     st.write("")
 
     # Figures side by side for overall return times
-    fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_return_times.pkl")
-    with open(fig_path_1, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data1 = svg_buffer.getvalue()
-    svg_data_scaled1 = svg_data1.replace('<svg ', '<svg style="width:108%; height:auto;" ')
+    fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_return_times.pdf")
+    pdf_viewer(fig_path_1, width=1200, height=900)
 
-    fig_path_2 = os.path.join(FIGURES_PKL, "overall_return_times.pkl")
-    with open(fig_path_2, "rb") as f:
-        fig2 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig2.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data2 = svg_buffer.getvalue()
-    svg_data_scaled2 = svg_data2.replace('<svg ', '<svg style="width:93%; height:auto;" ')
+    fig_path_2 = os.path.join(FIGURES_PKL, "overall_return_times.pdf")
+    pdf_viewer(fig_path_2, width=1200, height=900)
 
     col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled1}</div>',
-            unsafe_allow_html=True,
-        )
-    with col2:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled2}</div>',
-            unsafe_allow_html=True,
-        )
+    #with col1:
+       # st.markdown(
+     #       f'<div style="text-align: center;">{svg_data_scaled1}</div>',
+      #      unsafe_allow_html=True,
+        #)
+    #with col2:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled2}</div>',
+       #     unsafe_allow_html=True,
+        #)
 
     st.write("")
     st.markdown("""<div style="text-align: justify;">It would now seem as though Music has taken a definite lead in this round. We can clearly observe that Music channels \
@@ -419,36 +369,25 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
                 baseline value. Once again, they will show results for channel averages and overall decay rates. </div>""", unsafe_allow_html=True)
     st.write("")
     # Figures side by side for overall decay rates
-    fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_decay_rates.pkl")
-    with open(fig_path_1, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data1 = svg_buffer.getvalue()
-    svg_data_scaled1 = svg_data1.replace('<svg ', '<svg style="width:108%; height:auto;" ')
 
-    fig_path_2 = os.path.join(FIGURES_PKL, "overall_decay_rates.pkl")
-    with open(fig_path_2, "rb") as f:
-        fig2 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig2.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data2 = svg_buffer.getvalue()
-    svg_data_scaled2 = svg_data2.replace('<svg ', '<svg style="width:93%; height:auto;" ')
+    fig_path_1 = os.path.join(FIGURES_PKL, "overall_channel_avg_decay_rates.pdf")
+    pdf_viewer(fig_path_1, width=1200, height=900)
+
+    fig_path_2 = os.path.join(FIGURES_PKL, "overall_decay_rates.pdf")
+    pdf_viewer(fig_path_2, width=1200, height=900)
 
     col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled1}</div>',
-            unsafe_allow_html=True,
-        )
-    with col2:
-        st.markdown(
-            f'<div style="text-align: center;">{svg_data_scaled2}</div>',
-            unsafe_allow_html=True,
-        )
+    #with col1:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled1}</div>',
+       #     unsafe_allow_html=True,
+        #)
+    #with col2:
+     #   st.markdown(
+      #      f'<div style="text-align: center;">{svg_data_scaled2}</div>',
+       #     unsafe_allow_html=True,
+        #)
 
     st.write("")
     st.markdown("""<div style="text-align: justify;">It seems as though we can predict where this round is going: Music channels have smaller decay rates than Entertainment channels, \
@@ -463,15 +402,8 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     st.write("")
 
     # Figure of overall peak heights
-    fig_path_1 = os.path.join(FIGURES_PKL, "Peak_Heights_Overall.pkl")
-    with open(fig_path_1, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data1 = svg_buffer.getvalue()
-    svg_data_scaled1 = svg_data1.replace('<svg ', '<svg style="width:100%; height:auto;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled1}</div>", height=500, scrolling=True)
+    fig_path_1 = os.path.join(FIGURES_PKL, "Peak_Heights_Overall.pdf")
+    pdf_viewer(fig_path_1, width=1200, height=900)
 
     st.write("")
     st.markdown("""<div style="text-align: justify;">Well, it seems as though we have a winner for this round! The distribution of the peak heights is very similar between Music\
@@ -504,9 +436,9 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Paths to figures
     figure_paths = {
-        "Justin Bieber": os.path.join(FIGURES_PKL, "Justin_Bieber_time_series.pkl"),
-        "Ed Sheeran": os.path.join(FIGURES_PKL, "Ed_Sheeran_time_series.pkl"),
-        "Coldplay": os.path.join(FIGURES_PKL, "Coldplay_time_series.pkl")
+        "Justin Bieber": os.path.join(FIGURES_PKL, "Justin_Bieber_time_series.pdf"),
+        "Ed Sheeran": os.path.join(FIGURES_PKL, "Ed_Sheeran_time_series.pdf"),
+        "Coldplay": os.path.join(FIGURES_PKL, "Coldplay_time_series.pdf")
     }
 
     # User selection
@@ -514,8 +446,9 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
 
     # Display the selected figure
     if selected_figure:
-        svg_data = get_svg_from_figure(figure_paths[selected_figure])
-        st.markdown(f'<div style="text-align: center;">{svg_data}</div>', unsafe_allow_html=True)
+        pdf_viewer(figure_paths[selected_figure])
+        #svg_data = get_svg_from_figure(figure_paths[selected_figure])
+        #st.markdown(f'<div style="text-align: center;">{svg_data}</div>', unsafe_allow_html=True)
 
 
     st.markdown(""" ## Diversity Comparison Between Music and Entertainment""")
@@ -530,15 +463,8 @@ In Entertainment, the impact of collaboration is present but less pronounced. Co
     """When we visualize the themes of each category as word clouds, where the size of each word reflects its prominence, we get this delightful illustration:"""
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "wordcloud_music_vs_entertainment_general.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=300, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "wordcloud_music_vs_entertainment_general.pdf")
+    pdf_viewer(fig1_path, width=1200, height=900)
 
     """But now, it’s time to quantify this diversity and crown the evening's ultimate champion—the suspense is unbearable! Now that we have identified the main themes for each category, we can calculate the average distance between them. The greater this distance, the more diverse the themes; the smaller it is, the less varied they are. 
 
@@ -547,43 +473,22 @@ But here’s the burning question: how on earth do you calculate the distance be
 In essence, each word is assigned a vector, and we calculate the average distance between these vectors. This average distance becomes our measure of diversity—voilà! When we visualize the distribution of diversity scores for the top 10,000 videos in each category, this is what it looks like:"""
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "diversity_histogram.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=600, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "diversity_histogram.pdf")
+    pdf_viewer(fig1_path, width=1200, height=800)
 
 
     """We notice that the distributions are quite similar, but Music shows a slightly higher average diversity. Yet, something feels off—we're not accounting for the timeline of the videos, i.e., how diversity evolves over time and which category ultimately crosses the finish line as the most diverse.""" 
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_days.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=800, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_days.pdf")
+    pdf_viewer(fig1_path, width=1200, height=800)
 
 
     """When we examine diversity with fine granularity, day by day, we observe significant variance at the start for both categories, which gradually stabilizes over time. But what if we take a step back and adopt a broader perspective for a clearer picture?"""
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_months.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=800, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_months.pdf")
+    pdf_viewer(fig1_path, width=1200, height=800)
 
 
     """Things are becoming clearer now—we see that both diversity curves follow an upward trend over time. This indicates that as time goes on, the content in both Music and Entertainment becomes increasingly varied. Fascinating insights! 
@@ -591,26 +496,12 @@ In essence, each word is assigned a vector, and we calculate the average distanc
 However, it's still tricky to pinpoint the ultimate winner, as the two curves remain close to one another. Let’s step even further back and use years as our time window for a broader perspective."""
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_year.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=800, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_year.pdf")
+    pdf_viewer(fig1_path, width=1200, height=900)
 
     # Overall time evolution of delta_views
-    fig1_path = os.path.join(FIGURES_PKL, "diversity_music_vs_entertainment_years_zoom.pkl")
-    with open(fig1_path, "rb") as f:
-        fig1 = pickle.load(f)
-    svg_buffer = io.StringIO()
-    fig1.savefig(svg_buffer, format='svg', bbox_inches='tight')
-    svg_buffer.seek(0)
-    svg_data = svg_buffer.getvalue()
-    svg_data_scaled = svg_data.replace('<svg ', '<svg style="width:100%; height:100%;" ')
-    st.components.v1.html(f"<div>{svg_data_scaled}</div>", height=800, scrolling=True)
+    fig1_path = os.path.join(FIGURES_PDF, "diversity_music_vs_entertainment_years_zoom.pdf")
+    pdf_viewer(fig1_path, width=1200, height=900)
 
     """And there it is—crystal clear! We can now see how the diversity scores of the two categories intertwined over time. At first, Entertainment held the lead, only to be overtaken by Music, which gained a comfortable advantage. But in a stunning turn of events, Entertainment, against all odds, made an incredible comeback, snatching the lead and finishing as the winner! 
 
