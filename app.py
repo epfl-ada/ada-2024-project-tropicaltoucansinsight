@@ -146,8 +146,9 @@ if selected_section == "Analysis and Results":
 
     # Figures side by side for overall decay rates
 
-    fig_path_1 = str(os.path.join(FIGURES_PDF, "Distribution_of_Duration_mieux.png"))
-    image_data = base64.b64decode(fig_path_1)
+    fig_path_1 = str(os.path.join(FIGURES_PDF, "Distribution_of_Duration_mieux.pdf"))
+    #image_data = base64.b64decode(fig_path_1)
+    pdf_viewer(fig_path_1, width=900, height=450)
 
     # Display the image
     # st.image(image_data, caption="Base64 Image", use_column_width=True)
